@@ -91,7 +91,7 @@ func newBot(conn net.Conn, channels []string) *irc.Client {
 		return nil
 	})
 
-	client.Write("USER %s localhost * :%s", *nick, *name)
+	client.Write("USER %s %s * :%s", *nick, *host, *name)
 	client.Write("NICK %s", *nick)
 
 	return client

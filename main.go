@@ -47,7 +47,6 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
-
 	defer conn.Close()
 
 	for {
@@ -76,7 +75,7 @@ func main() {
 }
 
 func newBot(conn net.Conn, channels []string) *irc.Client {
-	client := irc.NewClient(conn)
+	client := irc.NewClient(&conn)
 	client.CmdHook("ping", func(c *irc.Client, m *irc.Message) error {
 		return c.Write("PONG %s", m.Data)
 	})

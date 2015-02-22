@@ -21,11 +21,11 @@ import (
 type Hook func(*Client, *Message) error
 
 type Client struct {
-	conn  net.Conn
+	conn  *net.Conn
 	hooks map[string][]Hook
 }
 
-func NewClient(conn net.Conn) *Client {
+func NewClient(conn *net.Conn) *Client {
 	return &Client{
 		conn:  conn,
 		hooks: make(map[string][]Hook),
@@ -33,7 +33,7 @@ func NewClient(conn net.Conn) *Client {
 }
 
 func (c *Client) Write(format string, argv ...interface{}) error {
-	_, err := fmt.Fprintf(c.conn, "%s\r\n", fmt.Sprintf(format, argv...))
+	_, err := fmt.Fprintf(*c.conn, "%s\r\n", fmt.Sprintf(format, argv...))
 	if err != nil {
 		return err
 	}

@@ -17,6 +17,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"github.com/nmeum/marvin/irc"
 	"log"
 	"net"
 	"os"
@@ -74,13 +75,13 @@ func main() {
 	}
 }
 
-func newBot(conn net.Conn, channels []string) *Client {
-	client := newClient(conn)
-	client.CmdHook("ping", func(c *Client, m *Message) error {
+func newBot(conn net.Conn, channels []string) *irc.Client {
+	client := irc.NewClient(conn)
+	client.CmdHook("ping", func(c *irc.Client, m *irc.Message) error {
 		return c.Write("PONG %s", m.Data)
 	})
 
-	client.CmdHook("001", func(c *Client, m *Message) error {
+	client.CmdHook("001", func(c *irc.Client, m *irc.Message) error {
 		for _, ch := range channels {
 			if err := c.Write("JOIN %s", ch); err != nil {
 				return err

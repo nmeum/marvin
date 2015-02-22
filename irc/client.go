@@ -11,7 +11,7 @@
 // You should have received a copy of the GNU Affero General Public
 // License along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package irc
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ type Client struct {
 	hooks map[string][]Hook
 }
 
-func newClient(conn net.Conn) *Client {
+func NewClient(conn net.Conn) *Client {
 	return &Client{
 		conn:  conn,
 		hooks: make(map[string][]Hook),

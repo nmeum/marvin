@@ -53,9 +53,10 @@ func main() {
 		ircBot := newBot(conn, flag.Args())
 		scanner := bufio.NewScanner(conn)
 		for scanner.Scan() {
-			line := scanner.Text()
-			fmt.Println(line)
-			ircBot.Handle(line)
+			errChan := ircBot.Handle(scanner.Text())
+			for err := range errChan {
+				logger.Println(err)
+			}
 		}
 
 		if err := scanner.Err(); err != nil {

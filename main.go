@@ -42,7 +42,7 @@ func main() {
 		logger.Fatalf("USAGE: %s %s", appName, appUsage)
 	}
 
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", host, port))
+	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", *host, *port))
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -54,6 +54,7 @@ func main() {
 		scanner := bufio.NewScanner(conn)
 		for scanner.Scan() {
 			line := scanner.Text()
+			fmt.Println(line)
 			ircBot.Handle(line)
 		}
 
@@ -89,8 +90,8 @@ func newBot(conn net.Conn, channels []string) *Client {
 		return nil
 	})
 
-	client.Write("USER %s localhost * :%s", nick, name)
-	client.Write("NICK %s", nick)
+	client.Write("USER %s localhost * :%s", *nick, *name)
+	client.Write("NICK %s", *nick)
 
 	return client
 }

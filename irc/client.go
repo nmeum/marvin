@@ -41,7 +41,7 @@ func (c *Client) Write(format string, argv ...interface{}) error {
 	return nil
 }
 
-func (c *Client) Handle(data string) chan error {
+func (c *Client) Handle(data string) <-chan error {
 	out := make(chan error)
 	msg := parseMessage(data)
 
@@ -56,6 +56,7 @@ func (c *Client) Handle(data string) chan error {
 		}
 	}
 
+	close(out)
 	return out
 }
 

@@ -23,19 +23,18 @@ type Sender struct {
 }
 
 type Message struct {
-	Sender   *Sender
+	Sender   Sender
 	Receiver string
 	Command  string
 	Data     string
 }
 
-func parseMessage(line string) *Message {
-	msg := new(Message)
+func parseMessage(line string) Message {
+	msg := Message{}
 	if strings.HasPrefix(line, ":") {
 		idx := strings.Index(line, " ")
-		msg.Sender = new(Sender)
+		msg.Sender = Sender{Name: line[1:idx]}
 
-		msg.Sender.Name = line[1:idx]
 		if strings.Contains(msg.Sender.Name, "!") {
 			s := strings.Split(msg.Sender.Name, "!")
 			msg.Sender.Name = s[0]

@@ -18,7 +18,7 @@ import (
 	"net"
 )
 
-type Hook func(*Client, *Message) error
+type Hook func(*Client, Message) error
 
 type Client struct {
 	conn  *net.Conn

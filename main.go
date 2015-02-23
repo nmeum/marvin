@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
+	"github.com/nmeum/marvin/modules/remind"
 	"github.com/nmeum/marvin/modules/url"
 	"io/ioutil"
 	"log"
@@ -48,6 +49,7 @@ var (
 type moduleInit func(*modules.ModuleSet)
 
 var moduleInits = []moduleInit{
+	remind.Init,
 	url.Init,
 }
 

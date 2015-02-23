@@ -41,6 +41,7 @@ var (
 	name = flag.String("r", "Marvin Bot", "realname")
 	host = flag.String("h", "irc.hackint.eu", "host")
 	cert = flag.String("c", "", "certificate")
+	verb = flag.Bool("v", false, "verbose output")
 	port = flag.Int("p", 6667, "port")
 )
 
@@ -72,7 +73,9 @@ func main() {
 		scanner := bufio.NewScanner(conn)
 		for scanner.Scan() {
 			data := scanner.Text()
-			fmt.Println(data)
+			if *verb {
+				fmt.Println(data)
+			}
 
 			errChan := ircBot.Handle(data)
 			for err := range errChan {

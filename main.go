@@ -16,11 +16,13 @@ package main
 import (
 	"bufio"
 	"crypto/tls"
+	"crypto/x509"
 	"flag"
 	"fmt"
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
 	"github.com/nmeum/marvin/modules/url"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -36,8 +38,7 @@ var (
 	nick = flag.String("n", "marvin", "nickname")
 	name = flag.String("r", "Marvin Bot", "realname")
 	host = flag.String("h", "irc.hackint.eu", "host")
-	ussl = flag.Bool("s", false, "enable ssl")
-	issl = flag.Bool("i", false, "ignore invalid ssl certs")
+	cert = flag.String("c", "", "certificate")
 	port = flag.Int("p", 6667, "port")
 )
 
@@ -121,12 +122,16 @@ func initializeModules(c *irc.Client) error {
 }
 
 func connect(network, address string) (conn net.Conn, err error) {
-	if *ussl {
-		config := new(tls.Config)
-		if *issl {
-			config.InsecureSkipVerify = true
+	if len(*cert) >= 1 {
+		certFile, err := ioutil.ReadFile(*cert)
+		if err != nil {
+			return nil, err
 		}
 
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(certFile)
+
+		config := &tls.Config{RootCAs: caCertPool}
 		return tls.Dial(network, address, config)
 	}
 

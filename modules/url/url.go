@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	urlRegex = `^(http|https)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*$`
+	urlRegex = `(http|https)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*`
 )
 
 type Module struct {
@@ -33,11 +33,12 @@ func (m *Module) Help() string {
 func (m *Module) Load(client *irc.Client) error {
 	regex := regexp.MustCompile(urlRegex)
 	client.CmdHook("privmsg", func(c *irc.Client, msg irc.Message) error {
-		if !regex.MatchString(msg.Data) {
+		url := regex.FindString(msg.Data)
+		if len(url) <= 0 {
 			return nil
 		}
 
-		title, err := m.extractTitle(msg.Data)
+		title, err := m.extractTitle(url)
 		if err == nil {
 			c.Write("NOTICE %s :Page title: %q", msg.Receiver, title)
 		}

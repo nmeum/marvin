@@ -81,7 +81,7 @@ func (m *ModuleSet) helpCmd(client *irc.Client, msg irc.Message) error {
 	}
 
 	help := fmt.Sprintf("The following modules are available: %s",
-		strings.Join(names, " "))
+		strings.Join(names, ", "))
 
 	return client.Write("NOTICE %s :%s", msg.Receiver, help)
 }

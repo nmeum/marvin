@@ -68,7 +68,10 @@ func main() {
 
 		scanner := bufio.NewScanner(conn)
 		for scanner.Scan() {
-			errChan := ircBot.Handle(scanner.Text())
+			data := scanner.Text()
+			fmt.Println(data)
+
+			errChan := ircBot.Handle(data)
 			for err := range errChan {
 				logger.Println(err)
 			}
@@ -101,7 +104,10 @@ func setup(conn net.Conn, channels []string) (client *irc.Client, err error) {
 	client.Write("USER %s %s * :%s", *nick, *host, *name)
 	client.Write("NICK %s", *nick)
 
-	err = initializeModules(client)
+	if err = initializeModules(client); err != nil {
+		return
+	}
+
 	return
 }
 

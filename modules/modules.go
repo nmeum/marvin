@@ -32,6 +32,9 @@ func (m *ModuleSet) LoadAll() error {
 		}
 	}
 
+	m.client.CmdHook("privmsg", m.helpCmd)
+	m.client.CmdHook("privmsg", m.moduleCmd)
+
 	return nil
 }
 
@@ -41,9 +44,6 @@ func (m *ModuleSet) findModule(name string) Module {
 			return module
 		}
 	}
-
-	m.client.CmdHook("privmsg", m.helpCmd)
-	m.client.CmdHook("privmsg", m.moduleCmd)
 
 	return nil
 }
@@ -70,7 +70,7 @@ func (m *ModuleSet) moduleCmd(client *irc.Client, msg irc.Message) error {
 		return nil
 	}
 
-	name := strings.ToLower(splited[2])
+	name := strings.ToLower(splited[1])
 	module := m.findModule(name)
 	if module == nil {
 		return client.Write("PRIVMSG %s :Module %q isn't installed",
@@ -78,5 +78,5 @@ func (m *ModuleSet) moduleCmd(client *irc.Client, msg irc.Message) error {
 	}
 
 	return client.Write("PRIVMSG %s :%s module: %s",
-		module.Name(), msg.Receiver, module.Help())
+		msg.Receiver, module.Name(), module.Help())
 }

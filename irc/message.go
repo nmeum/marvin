@@ -52,7 +52,7 @@ func parseMessage(line string) Message {
 		idx = strings.Index(line, ":")
 		if idx >= 0 {
 			msg.Receiver = strings.TrimSpace(line[0:idx])
-			msg.Data = line[idx+1:]
+			msg.Data = strings.TrimSpace(line[idx+1:])
 		}
 	} else {
 		msg.Data = line[1:]

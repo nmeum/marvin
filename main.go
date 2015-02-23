@@ -37,6 +37,7 @@ var (
 	name = flag.String("r", "Marvin Bot", "realname")
 	host = flag.String("h", "irc.hackint.eu", "host")
 	ussl = flag.Bool("s", false, "enable ssl")
+	issl = flag.Bool("i", false, "ignore invalid ssl certs")
 	port = flag.Int("p", 6667, "port")
 )
 
@@ -115,7 +116,12 @@ func initializeModules(c *irc.Client) error {
 
 func connect(network, address string) (conn net.Conn, err error) {
 	if *ussl {
-		return tls.Dial(network, address, nil)
+		config := new(tls.Config)
+		if *issl {
+			config.InsecureSkipVerify = true
+		}
+
+		return tls.Dial(network, address, config)
 	}
 
 	return net.Dial(network, address)

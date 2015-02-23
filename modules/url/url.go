@@ -27,7 +27,7 @@ func (m *Module) Name() string {
 }
 
 func (m *Module) Help() string {
-	return "Displays HTML titles for HTTP links"
+	return "Displays HTML titles for HTTP links."
 }
 
 func (m *Module) Load(client *irc.Client) error {

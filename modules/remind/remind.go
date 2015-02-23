@@ -34,7 +34,8 @@ func (m *Module) Load(client *irc.Client) error {
 			return nil
 		}
 
-		duration, err := time.ParseDuration(splited[1])
+		rawDuration := splited[1]
+		duration, err := time.ParseDuration(rawDuration)
 		if err != nil {
 			return err
 		}
@@ -45,13 +46,14 @@ func (m *Module) Load(client *irc.Client) error {
 				duration.Hours(), limit.Hours())
 		}
 
+		reminder := strings.Join(splited[2:], " ")
 		time.AfterFunc(duration, func() {
 			c.Write("PRIVMSG %s :Reminder: %s",
-				msg.Sender.Name, splited[2])
+				msg.Sender.Name, reminder)
 		})
 
 		return c.Write("NOTICE %s :Reminder setup for %s",
-			msg.Receiver, splited[1])
+			msg.Receiver, rawDuration)
 	})
 
 	return nil

@@ -18,6 +18,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/nmeum/marvin/irc"
+	"github.com/nmeum/marvin/modules"
+	"github.com/nmeum/marvin/modules/url"
 	"log"
 	"net"
 	"os"
@@ -36,6 +38,12 @@ var (
 	port = flag.Int("p", 6667, "port")
 )
 
+type moduleInit func(*modules.ModuleSet)
+
+var moduleInits = []moduleInit{
+	url.Init,
+}
+
 func main() {
 	flag.Parse()
 	logger := log.New(os.Stderr, fmt.Sprintf("%s:", appName), 0)
@@ -50,7 +58,11 @@ func main() {
 	defer conn.Close()
 
 	for {
-		ircBot := newBot(conn, flag.Args())
+		ircBot, err := setup(conn, flag.Args())
+		if err != nil {
+			logger.Println(err)
+		}
+
 		scanner := bufio.NewScanner(conn)
 		for scanner.Scan() {
 			errChan := ircBot.Handle(scanner.Text())
@@ -63,20 +75,13 @@ func main() {
 			logger.Println(err)
 		}
 
-		var err error
-		for i := 1; err != nil; i++ {
-			conn, err = reconnect(conn)
-			if err != nil {
-				logger.Println(err)
-				time.Sleep((time.Duration)(i*3) * time.Second)
-			}
-			defer conn.Close()
-		}
+		conn = reconnect(conn)
+		defer conn.Close()
 	}
 }
 
-func newBot(conn net.Conn, channels []string) *irc.Client {
-	client := irc.NewClient(&conn)
+func setup(conn net.Conn, channels []string) (client *irc.Client, err error) {
+	client = irc.NewClient(&conn)
 	client.CmdHook("ping", func(c *irc.Client, m irc.Message) error {
 		return c.Write("PONG %s", m.Data)
 	})
@@ -94,17 +99,32 @@ func newBot(conn net.Conn, channels []string) *irc.Client {
 	client.Write("USER %s %s * :%s", *nick, *host, *name)
 	client.Write("NICK %s", *nick)
 
-	return client
+	err = initializeModules(client)
+	return
 }
 
-func reconnect(c net.Conn) (conn net.Conn, err error) {
+func initializeModules(c *irc.Client) error {
+	moduleSet := modules.NewModuleSet(c)
+	for _, fn := range moduleInits {
+		fn(moduleSet)
+	}
+
+	return moduleSet.LoadAll()
+}
+
+func reconnect(c net.Conn) net.Conn {
 	addr := c.RemoteAddr()
 	c.Close()
 
-	conn, err = net.Dial("tcp", addr.String())
-	if err != nil {
-		return
+	var err error
+	var conn net.Conn
+
+	for i := 1; err != nil; i++ {
+		conn, err = net.Dial(addr.Network(), addr.String())
+		if err != nil {
+			time.Sleep((time.Duration)(i*3) * time.Second)
+		}
 	}
 
-	return
+	return conn
 }

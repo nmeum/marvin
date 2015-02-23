@@ -61,7 +61,7 @@ func (m *ModuleSet) helpCmd(client *irc.Client, msg irc.Message) error {
 	help := fmt.Sprintf("The following modules are available: %s",
 		strings.Join(names, " "))
 
-	return client.Write("PRIVMSG %s :%s", msg.Receiver, help)
+	return client.Write("NOTICE %s :%s", msg.Receiver, help)
 }
 
 func (m *ModuleSet) moduleCmd(client *irc.Client, msg irc.Message) error {
@@ -73,10 +73,10 @@ func (m *ModuleSet) moduleCmd(client *irc.Client, msg irc.Message) error {
 	name := strings.ToLower(splited[1])
 	module := m.findModule(name)
 	if module == nil {
-		return client.Write("PRIVMSG %s :Module %q isn't installed",
+		return client.Write("NOTICE %s :Module %q isn't installed",
 			msg.Receiver, name)
 	}
 
-	return client.Write("PRIVMSG %s :%s module: %s",
+	return client.Write("NOTICE %s :%s module: %s",
 		msg.Receiver, module.Name(), module.Help())
 }

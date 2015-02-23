@@ -48,11 +48,11 @@ func (c *Client) Handle(data string) <-chan error {
 	hooks, ok := c.hooks[msg.Command]
 	if ok {
 		for _, hook := range hooks {
-			go func() {
-				if err := hook(c, msg); err != nil {
+			go func(h Hook) {
+				if err := h(c, msg); err != nil {
 					out <- err
 				}
-			}()
+			}(hook)
 		}
 	}
 

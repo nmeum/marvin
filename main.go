@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
+	"github.com/nmeum/marvin/modules/nickserv"
 	"github.com/nmeum/marvin/modules/remind"
 	"github.com/nmeum/marvin/modules/url"
 	"io/ioutil"
@@ -49,6 +50,7 @@ var (
 type moduleInit func(*modules.ModuleSet)
 
 var moduleInits = []moduleInit{
+	nickserv.Init,
 	remind.Init,
 	url.Init,
 }

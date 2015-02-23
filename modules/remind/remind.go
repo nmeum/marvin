@@ -42,8 +42,8 @@ func (m *Module) Load(client *irc.Client) error {
 
 		limit := (time.Duration)(m.TimeLimit) * time.Hour
 		if duration > limit {
-			return c.Write("NOTICE %s :%d exceeds the limit of %d",
-				duration.Hours(), limit.Hours())
+			return c.Write("NOTICE %s :%v hours exceeds the limit of %v hours",
+				msg.Receiver, duration.Hours(), limit.Hours())
 		}
 
 		reminder := strings.Join(splited[2:], " ")

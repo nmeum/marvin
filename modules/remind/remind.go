@@ -8,7 +8,8 @@ import (
 )
 
 type Module struct {
-	TimeLimit int `json:"limit"`
+	TimeLimit int `json:"time_limit"`
+	UserLimit int `json:"user_limit"`
 }
 
 func Init(moduleSet *modules.ModuleSet) {
@@ -25,9 +26,11 @@ func (m *Module) Help() string {
 
 func (m *Module) Defaults() {
 	m.TimeLimit = 10
+	m.UserLimit = 3
 }
 
 func (m *Module) Load(client *irc.Client) error {
+	users := make(map[string]int)
 	client.CmdHook("privmsg", func(c *irc.Client, msg irc.Message) error {
 		splited := strings.Split(msg.Data, " ")
 		if len(splited) < 3 || splited[0] != "!remind" {
@@ -46,8 +49,15 @@ func (m *Module) Load(client *irc.Client) error {
 				msg.Receiver, duration.Hours(), limit.Hours())
 		}
 
+		if users[msg.Sender.Name] >= m.UserLimit {
+			return c.Write("NOTICE %s :You can only run %d reminders at a time",
+				msg.Receiver, m.UserLimit)
+		}
+
+		users[msg.Sender.Name]++
 		reminder := strings.Join(splited[2:], " ")
 		time.AfterFunc(duration, func() {
+			users[msg.Sender.Name]--
 			c.Write("PRIVMSG %s :Reminder: %s",
 				msg.Sender.Name, reminder)
 		})

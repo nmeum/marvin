@@ -15,6 +15,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"github.com/nmeum/marvin/irc"
@@ -35,6 +36,7 @@ var (
 	nick = flag.String("n", "marvin", "nickname")
 	name = flag.String("r", "Marvin Bot", "realname")
 	host = flag.String("h", "irc.hackint.eu", "host")
+	ussl = flag.Bool("s", false, "enable ssl")
 	port = flag.Int("p", 6667, "port")
 )
 
@@ -51,7 +53,7 @@ func main() {
 		logger.Fatalf("USAGE: %s %s", appName, appUsage)
 	}
 
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", *host, *port))
+	conn, err := connect("tcp", fmt.Sprintf("%s:%d", *host, *port))
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -111,6 +113,14 @@ func initializeModules(c *irc.Client) error {
 	return moduleSet.LoadAll()
 }
 
+func connect(network, address string) (conn net.Conn, err error) {
+	if *ussl {
+		return tls.Dial(network, address, nil)
+	}
+
+	return net.Dial(network, address)
+}
+
 func reconnect(c net.Conn) net.Conn {
 	addr := c.RemoteAddr()
 	c.Close()
@@ -119,7 +129,7 @@ func reconnect(c net.Conn) net.Conn {
 	var conn net.Conn
 
 	for i := 1; ; i++ {
-		conn, err = net.Dial(addr.Network(), addr.String())
+		conn, err = connect(addr.Network(), addr.String())
 		if err == nil {
 			break
 		}

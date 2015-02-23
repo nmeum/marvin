@@ -50,7 +50,8 @@ func (m *Module) Load(client *irc.Client) error {
 				msg.Sender.Name, splited[2])
 		})
 
-		return nil
+		return c.Write("NOTICE %s :Reminder setup for %s",
+			msg.Receiver, splited[1])
 	})
 
 	return nil

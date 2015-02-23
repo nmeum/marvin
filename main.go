@@ -72,6 +72,13 @@ func main() {
 			logger.Println(err)
 		}
 
+		errChan := make(chan error)
+		go func() {
+			for err := range errChan {
+				logger.Println(err)
+			}
+		}()
+
 		scanner := bufio.NewScanner(conn)
 		for scanner.Scan() {
 			data := scanner.Text()
@@ -79,10 +86,7 @@ func main() {
 				fmt.Println(data)
 			}
 
-			errChan := ircBot.Handle(data)
-			for err := range errChan {
-				logger.Println(err)
-			}
+			ircBot.Handle(data, errChan)
 		}
 
 		if err := scanner.Err(); err != nil {
@@ -90,6 +94,7 @@ func main() {
 		}
 
 		conn = reconnect(conn)
+		close(errChan)
 	}
 }
 

@@ -41,23 +41,18 @@ func (c *Client) Write(format string, argv ...interface{}) error {
 	return nil
 }
 
-func (c *Client) Handle(data string) <-chan error {
-	out := make(chan error)
+func (c *Client) Handle(data string, ch chan error) {
 	msg := parseMessage(data)
-
 	hooks, ok := c.hooks[msg.Command]
 	if ok {
 		for _, hook := range hooks {
 			go func(h Hook) {
 				if err := h(c, msg); err != nil {
-					out <- err
+					ch <- err
 				}
 			}(hook)
 		}
 	}
-
-	close(out)
-	return out
 }
 
 func (c *Client) CmdHook(cmd string, hook Hook) {

@@ -7,6 +7,7 @@ import (
 	"html"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"regexp"
 )
 
@@ -15,7 +16,7 @@ const (
 )
 
 type Module struct {
-	// TODO
+	Exclude []string `json:"exclude"`
 }
 
 func Init(moduleSet *modules.ModuleSet) {
@@ -30,23 +31,44 @@ func (m *Module) Help() string {
 	return "Displays HTML titles for HTTP links."
 }
 
+func (m *Module) Defaults() {
+	m.Exclude = []string{}
+}
+
 func (m *Module) Load(client *irc.Client) error {
 	regex := regexp.MustCompile(urlRegex)
 	client.CmdHook("privmsg", func(c *irc.Client, msg irc.Message) error {
-		url := regex.FindString(msg.Data)
-		if len(url) <= 0 {
+		link := regex.FindString(msg.Data)
+		if len(link) <= 0 {
 			return nil
 		}
 
-		title, err := m.extractTitle(url)
-		if err == nil {
-			c.Write("NOTICE %s :Page title: %q", msg.Receiver, title)
+		uri, err := url.Parse(link)
+		if err != nil {
+			return err
+		}
+
+		if err == nil && !m.isExcluded(uri.Host) {
+			title, err := m.extractTitle(link)
+			if err == nil {
+				c.Write("NOTICE %s :Page title: %q", msg.Receiver, title)
+			}
 		}
 
 		return nil
 	})
 
 	return nil
+}
+
+func (m *Module) isExcluded(host string) bool {
+	for _, h := range m.Exclude {
+		if host == h {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (m *Module) extractTitle(uri string) (title string, err error) {
@@ -64,8 +86,9 @@ func (m *Module) extractTitle(uri string) (title string, err error) {
 	regex := regexp.MustCompile("<title>(.*)</title>")
 	match := regex.FindStringSubmatch(string(body))
 
-	if len(match) <= 0 {
+	if len(match) < 2 {
 		err = errors.New("Couldn't extract title")
+		return
 	}
 
 	title = html.UnescapeString(match[1])

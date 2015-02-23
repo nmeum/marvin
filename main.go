@@ -26,6 +26,8 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/user"
+	"path/filepath"
 	"time"
 )
 
@@ -113,7 +115,17 @@ func setup(conn net.Conn, channels []string) (client *irc.Client, err error) {
 }
 
 func initializeModules(c *irc.Client) error {
-	moduleSet := modules.NewModuleSet(c)
+	config := os.Getenv("XDG_CONFIG_HOME")
+	if len(config) <= 0 {
+		user, err := user.Current()
+		if err != nil {
+			return err
+		}
+
+		config = filepath.Join(user.HomeDir, ".config")
+	}
+
+	moduleSet := modules.NewModuleSet(c, filepath.Join(config, appName))
 	for _, fn := range moduleInits {
 		fn(moduleSet)
 	}

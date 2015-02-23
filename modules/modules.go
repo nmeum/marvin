@@ -1,8 +1,12 @@
 package modules
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/nmeum/marvin/irc"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -10,15 +14,17 @@ type Module interface {
 	Name() string
 	Help() string
 	Load(*irc.Client) error
+	Defaults()
 }
 
 type ModuleSet struct {
 	client  *irc.Client
 	modules []Module
+	configs string
 }
 
-func NewModuleSet(client *irc.Client) *ModuleSet {
-	return &ModuleSet{client: client}
+func NewModuleSet(client *irc.Client, configs string) *ModuleSet {
+	return &ModuleSet{client: client, configs: configs}
 }
 
 func (m *ModuleSet) Register(module Module) {
@@ -26,7 +32,23 @@ func (m *ModuleSet) Register(module Module) {
 }
 
 func (m *ModuleSet) LoadAll() error {
+	if err := os.MkdirAll(m.configs, 0755); err != nil {
+		return err
+	}
+
 	for _, module := range m.modules {
+		fn := fmt.Sprintf("%s.json", module.Name())
+		fp := filepath.Join(m.configs, fn)
+
+		data, err := ioutil.ReadFile(fp)
+		if err == nil {
+			if err := json.Unmarshal(data, &module); err != nil {
+				return err
+			}
+		} else {
+			module.Defaults()
+		}
+
 		if err := module.Load(m.client); err != nil {
 			return err
 		}

@@ -76,7 +76,6 @@ func main() {
 		}
 
 		conn = reconnect(conn)
-		defer conn.Close()
 	}
 }
 

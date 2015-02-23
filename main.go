@@ -118,11 +118,13 @@ func reconnect(c net.Conn) net.Conn {
 	var err error
 	var conn net.Conn
 
-	for i := 1; err != nil; i++ {
+	for i := 1; ; i++ {
 		conn, err = net.Dial(addr.Network(), addr.String())
-		if err != nil {
-			time.Sleep((time.Duration)(i*3) * time.Second)
+		if err == nil {
+			break
 		}
+
+		time.Sleep((time.Duration)(i*3) * time.Second)
 	}
 
 	return conn

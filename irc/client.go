@@ -93,5 +93,6 @@ func (c *Client) Handle(data string, ch chan error) {
 }
 
 func (c *Client) CmdHook(cmd string, hook Hook) {
+	cmd = strings.ToLower(cmd)
 	c.hooks[cmd] = append(c.hooks[cmd], hook)
 }

@@ -60,7 +60,7 @@ var moduleInits = []moduleInit{
 
 func main() {
 	flag.Parse()
-	logger := log.New(os.Stderr, fmt.Sprintf("%s:", appName), 0)
+	logger := log.New(os.Stderr, "ERROR: ", 0)
 	if flag.NArg() < 1 {
 		logger.Fatalf("USAGE: %s %s", appName, appUsage)
 	}

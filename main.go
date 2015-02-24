@@ -110,7 +110,7 @@ func setup(conn net.Conn, channels []string) (client *irc.Client, err error) {
 
 	client.Channels = channels
 	client.CmdHook("001", func(c *irc.Client, m irc.Message) error {
-		time.Sleep(5 * time.Second)
+		time.Sleep(3 * time.Second)
 		return c.Write("JOIN %s", strings.Join(c.Channels, ","))
 	})
 

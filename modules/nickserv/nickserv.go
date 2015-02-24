@@ -36,13 +36,8 @@ func (m *Module) Load(client *irc.Client) error {
 	}
 
 	client.CmdHook("notice", func(c *irc.Client, msg irc.Message) error {
-		if msg.Sender.Name != m.NickServ {
+		if msg.Sender.Name != m.NickServ || !strings.Contains(msg.Data, m.Keyword) {
 			return nil
-		}
-
-		if !strings.Contains(msg.Data, m.Keyword) {
-			return nil
-
 		}
 
 		return c.Write("PRIVMSG %s :identify %s",

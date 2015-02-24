@@ -47,7 +47,6 @@ func (c *Client) pingCmd(client *Client, msg Message) error {
 
 func (c *Client) joinCmd(client *Client, msg Message) error {
 	c.Channels = append(c.Channels, msg.Data)
-	fmt.Println("Channels", c.Channels)
 	return nil
 }
 
@@ -62,7 +61,6 @@ func (c *Client) kickCmd(client *Client, msg Message) error {
 	}
 
 	c.Channels = newChannels
-	fmt.Println("Channels", c.Channels)
 	return nil
 }
 

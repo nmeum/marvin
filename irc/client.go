@@ -57,6 +57,7 @@ func (c *Client) partCmd(client *Client, msg Message) error {
 	parts := strings.Split(msg.Data, ",")
 
 	for _, p := range parts {
+		fmt.Println("Parted from", p)
 		for _, c := range c.Channels {
 			if p != c {
 				newChannels = append(newChannels, c)
@@ -65,7 +66,7 @@ func (c *Client) partCmd(client *Client, msg Message) error {
 	}
 
 	c.Channels = newChannels
-	fmt.Println(c.Channels)
+	fmt.Println("Channels", c.Channels)
 	return nil
 }
 

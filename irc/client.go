@@ -16,6 +16,7 @@ package irc
 import (
 	"fmt"
 	"net"
+	"strings"
 )
 
 type Hook func(*Client, Message) error
@@ -27,10 +28,50 @@ type Client struct {
 }
 
 func NewClient(conn *net.Conn) *Client {
-	return &Client{
+	c := &Client{
 		conn:  conn,
 		hooks: make(map[string][]Hook),
 	}
+
+	c.CmdHook("ping", c.pingCmd)
+	c.CmdHook("join", c.joinCmd)
+	c.CmdHook("part", c.partCmd)
+	c.CmdHook("kick", c.partCmd)
+	c.CmdHook("quit", c.quitCmd)
+
+	return c
+}
+
+func (c *Client) pingCmd(client *Client, msg Message) error {
+	return c.Write("PONG %s", msg.Data)
+}
+
+func (c *Client) joinCmd(client *Client, msg Message) error {
+	c.Channels = append(c.Channels, msg.Data)
+	fmt.Println("Channels", c.Channels)
+	return nil
+}
+
+func (c *Client) partCmd(client *Client, msg Message) error {
+	var newChannels []string
+	parts := strings.Split(msg.Data, ",")
+
+	for _, p := range parts {
+		for _, c := range c.Channels {
+			if p != c {
+				newChannels = append(newChannels, c)
+			}
+		}
+	}
+
+	c.Channels = newChannels
+	fmt.Println(c.Channels)
+	return nil
+}
+
+func (c *Client) quitCmd(client *Client, msg Message) error {
+	client.Channels = []string{}
+	return nil
 }
 
 func (c *Client) Write(format string, argv ...interface{}) error {

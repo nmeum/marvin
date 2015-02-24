@@ -23,6 +23,7 @@ import (
 	"github.com/nmeum/marvin/modules"
 	"github.com/nmeum/marvin/modules/nickserv"
 	"github.com/nmeum/marvin/modules/remind"
+	"github.com/nmeum/marvin/modules/twitter"
 	"github.com/nmeum/marvin/modules/url"
 	"io/ioutil"
 	"log"
@@ -52,6 +53,7 @@ type moduleInit func(*modules.ModuleSet)
 
 var moduleInits = []moduleInit{
 	nickserv.Init,
+	twitter.Init,
 	remind.Init,
 	url.Init,
 }

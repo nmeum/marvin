@@ -40,13 +40,12 @@ func (m *ModuleSet) LoadAll() error {
 		fn := fmt.Sprintf("%s.json", strings.ToLower(module.Name()))
 		fp := filepath.Join(m.configs, fn)
 
+		module.Defaults()
 		data, err := ioutil.ReadFile(fp)
 		if err == nil {
 			if err := json.Unmarshal(data, &module); err != nil {
 				return err
 			}
-		} else {
-			module.Defaults()
 		}
 
 		if err := module.Load(m.client); err != nil {

@@ -56,7 +56,7 @@ func (m *Module) Load(client *irc.Client) error {
 			return err
 		}
 
-		limit := (time.Duration)(m.TimeLimit) * time.Hour
+		limit := time.Duration(m.TimeLimit) * time.Hour
 		if duration > limit {
 			return c.Write("NOTICE %s :%v hours exceeds the limit of %v hours",
 				msg.Receiver, duration.Hours(), limit.Hours())

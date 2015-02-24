@@ -35,8 +35,7 @@ func NewClient(conn *net.Conn) *Client {
 
 	c.CmdHook("ping", c.pingCmd)
 	c.CmdHook("join", c.joinCmd)
-	c.CmdHook("part", c.partCmd)
-	c.CmdHook("kick", c.partCmd)
+	c.CmdHook("kick", c.kickCmd)
 	c.CmdHook("quit", c.quitCmd)
 
 	return c
@@ -52,16 +51,13 @@ func (c *Client) joinCmd(client *Client, msg Message) error {
 	return nil
 }
 
-func (c *Client) partCmd(client *Client, msg Message) error {
+func (c *Client) kickCmd(client *Client, msg Message) error {
 	var newChannels []string
-	parts := strings.Split(msg.Data, ",")
+	channel := strings.Split(msg.Receiver, " ")[0]
 
-	for _, p := range parts {
-		fmt.Println("Parted from", p)
-		for _, c := range c.Channels {
-			if p != c {
-				newChannels = append(newChannels, c)
-			}
+	for _, ch := range c.Channels {
+		if ch != channel {
+			newChannels = append(newChannels, ch)
 		}
 	}
 

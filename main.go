@@ -30,6 +30,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -105,14 +106,9 @@ func setup(conn net.Conn, channels []string) (client *irc.Client, err error) {
 		return c.Write("PONG %s", m.Data)
 	})
 
+	client.Channels = channels
 	client.CmdHook("001", func(c *irc.Client, m irc.Message) error {
-		for _, ch := range channels {
-			if err := c.Write("JOIN %s", ch); err != nil {
-				return err
-			}
-		}
-
-		return nil
+		return c.Write("JOIN %s", strings.Join(c.Channels, ","))
 	})
 
 	client.Write("USER %s %s * :%s", *nick, *host, *name)

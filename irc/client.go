@@ -21,8 +21,9 @@ import (
 type Hook func(*Client, Message) error
 
 type Client struct {
-	conn  *net.Conn
-	hooks map[string][]Hook
+	conn     *net.Conn
+	hooks    map[string][]Hook
+	Channels []string
 }
 
 func NewClient(conn *net.Conn) *Client {

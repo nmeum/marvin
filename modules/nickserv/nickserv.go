@@ -30,7 +30,7 @@ func Init(moduleSet *modules.ModuleSet) {
 }
 
 func (m *Module) Name() string {
-	return "NickServ"
+	return "nickserv"
 }
 
 func (m *Module) Help() string {

@@ -39,7 +39,6 @@ func (m *Module) Help() string {
 
 func (m *Module) Defaults() {
 	m.NickServ = "NickServ"
-	m.Password = ""
 	m.Keyword = "identify"
 }
 

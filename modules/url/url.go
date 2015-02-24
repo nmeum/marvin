@@ -45,7 +45,7 @@ func (m *Module) Help() string {
 }
 
 func (m *Module) Defaults() {
-	m.Exclude = []string{}
+	return
 }
 
 func (m *Module) Load(client *irc.Client) error {

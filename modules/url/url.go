@@ -64,7 +64,7 @@ func (m *Module) Load(client *irc.Client) error {
 		if err == nil && !m.isExcluded(uri.Host) {
 			title, err := m.extractTitle(link)
 			if err == nil {
-				c.Write("NOTICE %s :Page title: %q", msg.Receiver, title)
+				c.Write("NOTICE %s :Page title: %s", msg.Receiver, title)
 			}
 		}
 

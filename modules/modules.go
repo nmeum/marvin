@@ -50,7 +50,7 @@ func (m *ModuleSet) LoadAll() error {
 	}
 
 	for _, module := range m.modules {
-		fn := fmt.Sprintf("%s.json", strings.ToLower(module.Name()))
+		fn := fmt.Sprintf("%s.json", module.Name())
 		fp := filepath.Join(m.configs, fn)
 
 		module.Defaults()

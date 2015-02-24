@@ -37,7 +37,7 @@ func (m *ModuleSet) LoadAll() error {
 	}
 
 	for _, module := range m.modules {
-		fn := fmt.Sprintf("%s.json", module.Name())
+		fn := fmt.Sprintf("%s.json", strings.ToLower(module.Name()))
 		fp := filepath.Join(m.configs, fn)
 
 		data, err := ioutil.ReadFile(fp)

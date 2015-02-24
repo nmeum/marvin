@@ -46,7 +46,14 @@ func (c *Client) pingCmd(client *Client, msg Message) error {
 }
 
 func (c *Client) joinCmd(client *Client, msg Message) error {
-	c.Channels = append(c.Channels, msg.Data)
+	channel := msg.Data
+	for _, ch := range c.Channels {
+		if channel == ch {
+			return nil
+		}
+	}
+
+	c.Channels = append(c.Channels, channel)
 	return nil
 }
 

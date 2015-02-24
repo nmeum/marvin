@@ -49,15 +49,15 @@ func (m *Module) Load(client *irc.Client) error {
 				msg.Receiver, duration.Hours(), limit.Hours())
 		}
 
-		if users[msg.Sender.Name] >= m.UserLimit {
+		if users[msg.Sender.Host] >= m.UserLimit {
 			return c.Write("NOTICE %s :You can only run %d reminders at a time",
 				msg.Receiver, m.UserLimit)
 		}
 
-		users[msg.Sender.Name]++
+		users[msg.Sender.Host]++
 		reminder := strings.Join(splited[2:], " ")
 		time.AfterFunc(duration, func() {
-			users[msg.Sender.Name]--
+			users[msg.Sender.Host]--
 			c.Write("PRIVMSG %s :Reminder: %s",
 				msg.Sender.Name, reminder)
 		})

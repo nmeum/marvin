@@ -52,7 +52,7 @@ func (c *Client) joinCmd(client *Client, msg Message) error {
 
 func (c *Client) kickCmd(client *Client, msg Message) error {
 	var newChannels []string
-	channel := strings.Split(msg.Receiver, " ")[0]
+	channel := strings.Fields(msg.Receiver)[0]
 
 	for _, ch := range c.Channels {
 		if ch != channel {
@@ -93,6 +93,5 @@ func (c *Client) Handle(data string, ch chan error) {
 }
 
 func (c *Client) CmdHook(cmd string, hook Hook) {
-	cmd = strings.ToLower(cmd)
 	c.hooks[cmd] = append(c.hooks[cmd], hook)
 }

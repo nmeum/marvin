@@ -35,10 +35,10 @@ func parseMessage(line string) Message {
 		idx := strings.Index(line, " ")
 		msg.Sender = Sender{Name: line[1:idx]}
 
-		if strings.Contains(msg.Sender.Name, "!") {
-			s := strings.Split(msg.Sender.Name, "!")
-			msg.Sender.Name = s[0]
-			msg.Sender.Host = s[1]
+		user := strings.Split(msg.Sender.Name, "!")
+		if len(user) >= 2 {
+			msg.Sender.Name = user[0]
+			msg.Sender.Host = user[1]
 		}
 
 		line = line[idx+1:]

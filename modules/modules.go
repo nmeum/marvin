@@ -99,7 +99,7 @@ func (m *ModuleSet) helpCmd(client *irc.Client, msg irc.Message) error {
 }
 
 func (m *ModuleSet) moduleCmd(client *irc.Client, msg irc.Message) error {
-	splited := strings.Split(msg.Data, " ")
+	splited := strings.Fields(msg.Data)
 	if len(splited) < 2 || splited[0] != "!help" {
 		return nil
 	}

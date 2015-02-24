@@ -45,7 +45,7 @@ func (m *Module) Defaults() {
 func (m *Module) Load(client *irc.Client) error {
 	users := make(map[string]int)
 	client.CmdHook("privmsg", func(c *irc.Client, msg irc.Message) error {
-		splited := strings.Split(msg.Data, " ")
+		splited := strings.Fields(msg.Data)
 		if len(splited) < 3 || splited[0] != "!remind" {
 			return nil
 		}

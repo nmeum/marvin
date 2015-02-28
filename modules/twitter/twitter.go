@@ -18,11 +18,11 @@ import (
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
 	"net/url"
+	"strings"
 )
 
 type Module struct {
 	api               *anaconda.TwitterApi
-	Channels          []string
 	ConsumerKey       string `json:"consumer_key"`
 	ConsumerSecret    string `json:"consumer_secret"`
 	AccessToken       string `json:"access_token"`
@@ -38,7 +38,7 @@ func (m *Module) Name() string {
 }
 
 func (m *Module) Help() string {
-	return "Enables interaction with the socialmedia website twitter."
+	return "USAGE: !tweet TEXT || !reply ID TEXT"
 }
 
 func (m *Module) Defaults() {
@@ -49,6 +49,9 @@ func (m *Module) Load(client *irc.Client) error {
 	anaconda.SetConsumerKey(m.ConsumerKey)
 	anaconda.SetConsumerSecret(m.ConsumerSecret)
 	m.api = anaconda.NewTwitterApi(m.AccessToken, m.AccessTokenSecret)
+
+	client.CmdHook("privmsg", m.tweetCmd)
+	client.CmdHook("privmsg", m.replyCmd)
 
 	values := url.Values{}
 	values.Add("replies", "all")
@@ -67,8 +70,46 @@ func (m *Module) Load(client *irc.Client) error {
 	return nil
 }
 
+func (m *Module) tweetCmd(client *irc.Client, msg irc.Message) error {
+	splited := strings.Fields(msg.Data)
+	if len(splited) < 2 || splited[0] != "!tweet" || !client.IsConnected(msg.Receiver) {
+		return nil
+	}
+
+	status := strings.Join(splited[1:], " ")
+	if _, err := m.api.PostTweet(status, url.Values{}); err != nil {
+		return client.Write("NOTICE %s :ERROR: %s",
+			msg.Receiver, err.Error())
+	}
+
+	return nil
+}
+
+func (m *Module) replyCmd(client *irc.Client, msg irc.Message) error {
+	splited := strings.Fields(msg.Data)
+	if len(splited) < 3 || splited[0] != "!reply" || !client.IsConnected(msg.Receiver) {
+		return nil
+	}
+
+	values := url.Values{}
+	values.Add("in_reply_to_status_id", splited[1])
+
+	status := strings.Join(splited[2:], " ")
+	if !strings.Contains(status, "@") {
+		return client.Write("NOTICE %s :ERROR %s",
+			msg.Receiver, "A reply must contain a @mention")
+	}
+
+	if _, err := m.api.PostTweet(status, values); err != nil {
+		return client.Write("NOTICE %s :ERROR %s",
+			msg.Receiver, err.Error())
+	}
+
+	return nil
+}
+
 func (m *Module) notify(client *irc.Client, tweet anaconda.Tweet) {
-	for _, ch := range m.Channels {
+	for _, ch := range client.Channels {
 		client.Write("NOTICE %s :Tweet %d by %s: %s",
 			ch, tweet.Id, tweet.User.ScreenName, tweet.Text)
 	}

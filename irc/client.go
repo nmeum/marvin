@@ -26,13 +26,24 @@ type Client struct {
 	Channels []string
 }
 
-func NewClient(conn *net.Conn) *Client {
+func NewClient(conn *net.Conn, chans []string) *Client {
 	c := &Client{
-		conn:  conn,
-		hooks: make(map[string][]Hook),
+		conn:     conn,
+		hooks:    make(map[string][]Hook),
+		Channels: chans,
 	}
 
 	return c
+}
+
+func (c *Client) IsConnected(channel string) bool {
+	for _, c := range c.Channels {
+		if channel == c {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (c *Client) Write(format string, argv ...interface{}) error {

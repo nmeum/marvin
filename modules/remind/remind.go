@@ -34,7 +34,7 @@ func (m *Module) Name() string {
 }
 
 func (m *Module) Help() string {
-	return "!remind DURATION MSG"
+	return "USAGE: !remind DURATION MSG"
 }
 
 func (m *Module) Defaults() {

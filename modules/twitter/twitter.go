@@ -22,6 +22,7 @@ import (
 
 type Module struct {
 	api               *anaconda.TwitterApi
+	Channels          []string
 	ConsumerKey       string `json:"consumer_key"`
 	ConsumerSecret    string `json:"consumer_secret"`
 	AccessToken       string `json:"access_token"`
@@ -67,7 +68,7 @@ func (m *Module) Load(client *irc.Client) error {
 }
 
 func (m *Module) notify(client *irc.Client, tweet anaconda.Tweet) {
-	for _, ch := range client.Channels {
+	for _, ch := range m.Channels {
 		client.Write("NOTICE %s :Tweet %d by %s: %s",
 			ch, tweet.Id, tweet.User.ScreenName, tweet.Text)
 	}

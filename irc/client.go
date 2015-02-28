@@ -16,7 +16,6 @@ package irc
 import (
 	"fmt"
 	"net"
-	"strings"
 )
 
 type Hook func(*Client, Message) error
@@ -33,47 +32,7 @@ func NewClient(conn *net.Conn) *Client {
 		hooks: make(map[string][]Hook),
 	}
 
-	c.CmdHook("ping", c.pingCmd)
-	c.CmdHook("join", c.joinCmd)
-	c.CmdHook("kick", c.kickCmd)
-	c.CmdHook("quit", c.quitCmd)
-
 	return c
-}
-
-func (c *Client) pingCmd(client *Client, msg Message) error {
-	return c.Write("PONG %s", msg.Data)
-}
-
-func (c *Client) joinCmd(client *Client, msg Message) error {
-	channel := msg.Data
-	for _, ch := range c.Channels {
-		if channel == ch {
-			return nil
-		}
-	}
-
-	c.Channels = append(c.Channels, channel)
-	return nil
-}
-
-func (c *Client) kickCmd(client *Client, msg Message) error {
-	var newChannels []string
-	channel := strings.Fields(msg.Receiver)[0]
-
-	for _, ch := range c.Channels {
-		if ch != channel {
-			newChannels = append(newChannels, ch)
-		}
-	}
-
-	c.Channels = newChannels
-	return nil
-}
-
-func (c *Client) quitCmd(client *Client, msg Message) error {
-	client.Channels = []string{}
-	return nil
 }
 
 func (c *Client) Write(format string, argv ...interface{}) error {

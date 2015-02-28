@@ -104,6 +104,10 @@ func main() {
 
 func setup(conn net.Conn, channels []string) (client *irc.Client, err error) {
 	client = irc.NewClient(&conn)
+	client.CmdHook("ping", func(c *irc.Client, m irc.Message) error {
+		return c.Write("PONG %s", m.Data)
+	})
+
 	client.CmdHook("001", func(c *irc.Client, m irc.Message) error {
 		time.Sleep(3 * time.Second)
 		return c.Write("JOIN %s", strings.Join(channels, ","))

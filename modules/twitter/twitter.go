@@ -96,12 +96,12 @@ func (m *Module) replyCmd(client *irc.Client, msg irc.Message) error {
 
 	status := strings.Join(splited[2:], " ")
 	if !strings.Contains(status, "@") {
-		return client.Write("NOTICE %s :ERROR %s",
+		return client.Write("NOTICE %s :ERROR: %s",
 			msg.Receiver, "A reply must contain a @mention")
 	}
 
 	if _, err := m.api.PostTweet(status, values); err != nil {
-		return client.Write("NOTICE %s :ERROR %s",
+		return client.Write("NOTICE %s :ERROR: %s",
 			msg.Receiver, err.Error())
 	}
 

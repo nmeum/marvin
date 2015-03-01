@@ -172,7 +172,7 @@ func reconnect(c net.Conn) net.Conn {
 			break
 		}
 
-		time.Sleep((time.Duration)(i*3) * time.Second)
+		time.Sleep(time.Duration(i*3) * time.Second)
 	}
 
 	return conn

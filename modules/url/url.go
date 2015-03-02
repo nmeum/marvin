@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 )
 
 const (
@@ -96,7 +97,7 @@ func (m *Module) extractTitle(uri string) (title string, err error) {
 		return
 	}
 
-	regex := regexp.MustCompile("<title>(.*)</title>")
+	regex := regexp.MustCompile("(?is)<title>(.*)</title>")
 	match := regex.FindStringSubmatch(string(body))
 
 	if len(match) < 2 {
@@ -105,5 +106,7 @@ func (m *Module) extractTitle(uri string) (title string, err error) {
 	}
 
 	title = html.UnescapeString(match[1])
+	title = strings.TrimSpace(strings.Replace(title, "\n", "", -1))
+
 	return
 }

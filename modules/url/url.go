@@ -98,14 +98,14 @@ func (m *Module) extractTitle(uri string) (title string, err error) {
 	}
 
 	regex := regexp.MustCompile("(?is)<title>(.*)</title>")
-	match := regex.FindStringSubmatch(string(body))
+	match := regex.FindSubmatch(body)
 
 	if len(match) < 2 {
 		err = errors.New("Couldn't extract title")
 		return
 	}
 
-	title = html.UnescapeString(match[1])
+	title = html.UnescapeString(string(match[1]))
 	title = strings.TrimSpace(strings.Replace(title, "\n", "", -1))
 
 	return

@@ -111,6 +111,6 @@ func (m *ModuleSet) moduleCmd(client *irc.Client, msg irc.Message) error {
 			msg.Receiver, name)
 	}
 
-	return client.Write("NOTICE %s :%s module: %s",
+	return client.Write("NOTICE %s :%s: %s",
 		msg.Receiver, module.Name(), module.Help())
 }

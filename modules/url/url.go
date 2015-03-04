@@ -97,7 +97,7 @@ func (m *Module) extractTitle(uri string) (title string, err error) {
 		return
 	}
 
-	regex := regexp.MustCompile("(?is)<title>(.*)</title>")
+	regex := regexp.MustCompile("(?is)<title>(.+)</title>")
 	match := regex.FindSubmatch(body)
 
 	if len(match) < 2 {

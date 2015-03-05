@@ -18,6 +18,7 @@ import (
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -38,7 +39,7 @@ func (m *Module) Name() string {
 }
 
 func (m *Module) Help() string {
-	return "USAGE: !tweet TEXT || !reply ID TEXT"
+	return "USAGE: !tweet TEXT || !reply ID TEXT || !retweet ID || !favorite ID"
 }
 
 func (m *Module) Defaults() {
@@ -52,6 +53,8 @@ func (m *Module) Load(client *irc.Client) error {
 
 	client.CmdHook("privmsg", m.tweetCmd)
 	client.CmdHook("privmsg", m.replyCmd)
+	client.CmdHook("privmsg", m.retweetCmd)
+	client.CmdHook("privmsg", m.favoriteCmd)
 
 	values := url.Values{}
 	values.Add("replies", "all")
@@ -106,6 +109,46 @@ func (m *Module) replyCmd(client *irc.Client, msg irc.Message) error {
 	}
 
 	return nil
+}
+
+func (m *Module) retweetCmd(client *irc.Client, msg irc.Message) error {
+	splited := strings.Fields(msg.Data)
+	if len(splited) < 2 || splited[0] != "!retweet" || !client.IsConnected(msg.Receiver) {
+		return nil
+	}
+
+	id, err := strconv.Atoi(splited[1])
+	if err != nil {
+		return err
+	}
+
+	if _, err := m.api.Retweet(int64(id), false); err != nil {
+		return client.Write("NOTICE %s :ERROR: %s",
+			msg.Receiver, err.Error())
+	}
+
+	return nil
+}
+
+func (m *Module) favoriteCmd(client *irc.Client, msg irc.Message) error {
+	splited := strings.Fields(msg.Data)
+	if len(splited) < 2 || splited[0] != "!favorite" || !client.IsConnected(msg.Receiver) {
+		return nil
+	}
+
+	id, err := strconv.Atoi(splited[1])
+	if err != nil {
+		return err
+	}
+
+	tweet, err := m.api.Favorite(int64(id))
+	if err != nil {
+		return client.Write("NOTICE %s :ERROR: %s",
+			msg.Receiver, err.Error())
+	}
+
+	return client.Write("NOTICE %s :Favorited tweet %d by %s: %q",
+		msg.Receiver, tweet.Id, tweet.User.ScreenName, tweet.Text)
 }
 
 func (m *Module) notify(client *irc.Client, tweet anaconda.Tweet) {

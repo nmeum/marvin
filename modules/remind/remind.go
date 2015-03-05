@@ -50,8 +50,7 @@ func (m *Module) Load(client *irc.Client) error {
 			return nil
 		}
 
-		rawDuration := splited[1]
-		duration, err := time.ParseDuration(rawDuration)
+		duration, err := time.ParseDuration(splited[1])
 		if err != nil {
 			return err
 		}
@@ -76,7 +75,7 @@ func (m *Module) Load(client *irc.Client) error {
 		})
 
 		return c.Write("NOTICE %s :Reminder setup for %s",
-			msg.Receiver, rawDuration)
+			msg.Receiver, duration.String())
 	})
 
 	return nil

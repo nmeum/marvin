@@ -25,11 +25,13 @@ import (
 	"strings"
 )
 
-const (
-	urlRegex = `(http|https)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*`
+var (
+	urlRegex   = `(http|https)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*`
+	extractErr = errors.New("couldn't extract title")
 )
 
 type Module struct {
+	Regex   string   `json:"regex"`
 	Exclude []string `json:"exclude"`
 }
 
@@ -46,11 +48,11 @@ func (m *Module) Help() string {
 }
 
 func (m *Module) Defaults() {
-	return
+	m.Regex = urlRegex
 }
 
 func (m *Module) Load(client *irc.Client) error {
-	regex := regexp.MustCompile(urlRegex)
+	regex := regexp.MustCompile(m.Regex)
 	client.CmdHook("privmsg", func(c *irc.Client, msg irc.Message) error {
 		link := regex.FindString(msg.Data)
 		if len(link) <= 0 {
@@ -101,12 +103,26 @@ func (m *Module) extractTitle(uri string) (title string, err error) {
 	match := regex.FindSubmatch(body)
 
 	if len(match) < 2 {
-		err = errors.New("Couldn't extract title")
+		err = extractErr
 		return
 	}
 
 	title = html.UnescapeString(string(match[1]))
-	title = strings.TrimSpace(strings.Replace(title, "\n", " ", -1))
+	title = m.normalize(title)
+
+	if len(title) <= 0 {
+		err = extractErr
+		return
+	}
 
 	return
+}
+
+func (m *Module) normalize(title string) string {
+	normalized := strings.TrimSpace(strings.Replace(title, "\n", " ", -1))
+	for strings.Contains(normalized, "  ") {
+		normalized = strings.Replace(normalized, "  ", " ", -1)
+	}
+
+	return strings.TrimSpace(normalized)
 }

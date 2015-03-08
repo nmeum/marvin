@@ -106,7 +106,7 @@ func (m *Module) extractTitle(uri string) (title string, err error) {
 	}
 
 	title = html.UnescapeString(string(match[1]))
-	title = strings.TrimSpace(strings.Replace(title, "\n", "", -1))
+	title = strings.TrimSpace(strings.Replace(title, "\n", " ", -1))
 
 	return
 }

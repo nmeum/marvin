@@ -152,8 +152,9 @@ func (m *Module) favoriteCmd(client *irc.Client, msg irc.Message) error {
 }
 
 func (m *Module) notify(client *irc.Client, tweet anaconda.Tweet) {
+	text := strings.Replace(tweet.Text, "\n", " ", -1)
 	for _, ch := range client.Channels {
 		client.Write("NOTICE %s :Tweet %d by %s: %s",
-			ch, tweet.Id, tweet.User.ScreenName, tweet.Text)
+			ch, tweet.Id, tweet.User.ScreenName, text)
 	}
 }

@@ -107,9 +107,7 @@ func (m *Module) extractTitle(uri string) (title string, err error) {
 		return
 	}
 
-	title = html.UnescapeString(string(match[1]))
 	title = m.normalize(title)
-
 	if len(title) <= 0 {
 		err = extractErr
 		return
@@ -119,7 +117,7 @@ func (m *Module) extractTitle(uri string) (title string, err error) {
 }
 
 func (m *Module) normalize(title string) string {
-	normalized := strings.TrimSpace(strings.Replace(title, "\n", " ", -1))
+	normalized := html.UnescapeString(strings.Replace(title, "\n", " ", -1))
 	for strings.Contains(normalized, "  ") {
 		normalized = strings.Replace(normalized, "  ", " ", -1)
 	}

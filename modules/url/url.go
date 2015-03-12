@@ -107,7 +107,7 @@ func (m *Module) extractTitle(uri string) (title string, err error) {
 		return
 	}
 
-	title = m.normalize(title)
+	title = m.normalize(string(match[1]))
 	if len(title) <= 0 {
 		err = extractErr
 		return

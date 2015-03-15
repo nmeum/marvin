@@ -147,7 +147,7 @@ func (m *Module) favoriteCmd(client *irc.Client, msg irc.Message) error {
 			msg.Receiver, err.Error())
 	}
 
-	return client.Write("NOTICE %s :Favorited tweet %d by %s: %q",
+	return client.Write("NOTICE %s :Favorited tweet %d by %s: %s",
 		msg.Receiver, tweet.Id, tweet.User.ScreenName, tweet.Text)
 }
 

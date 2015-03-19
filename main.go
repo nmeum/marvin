@@ -162,13 +162,11 @@ func connect(network, address string) (conn net.Conn, err error) {
 	return net.Dial(network, address)
 }
 
-func reconnect(c net.Conn) net.Conn {
+func reconnect(c net.Conn) (conn net.Conn) {
 	addr := c.RemoteAddr()
 	c.Close()
 
 	var err error
-	var conn net.Conn
-
 	for i := 1; ; i++ {
 		conn, err = connect(addr.Network(), addr.String())
 		if err == nil {
@@ -178,5 +176,5 @@ func reconnect(c net.Conn) net.Conn {
 		time.Sleep(time.Duration(i*3) * time.Second)
 	}
 
-	return conn
+	return
 }

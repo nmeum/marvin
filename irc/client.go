@@ -21,29 +21,17 @@ import (
 type Hook func(*Client, Message) error
 
 type Client struct {
-	conn     *net.Conn
-	hooks    map[string][]Hook
-	Channels []string
+	conn  *net.Conn
+	hooks map[string][]Hook
 }
 
-func NewClient(conn *net.Conn, chans []string) *Client {
+func NewClient(conn *net.Conn) *Client {
 	c := &Client{
-		conn:     conn,
-		hooks:    make(map[string][]Hook),
-		Channels: chans,
+		conn:  conn,
+		hooks: make(map[string][]Hook),
 	}
 
 	return c
-}
-
-func (c *Client) IsConnected(channel string) bool {
-	for _, c := range c.Channels {
-		if channel == c {
-			return true
-		}
-	}
-
-	return false
 }
 
 func (c *Client) Write(format string, argv ...interface{}) error {

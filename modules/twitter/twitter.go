@@ -24,10 +24,11 @@ import (
 
 type Module struct {
 	api               *anaconda.TwitterApi
-	ConsumerKey       string `json:"consumer_key"`
-	ConsumerSecret    string `json:"consumer_secret"`
-	AccessToken       string `json:"access_token"`
-	AccessTokenSecret string `json:"access_token_secret"`
+	NotifyChans       []string `json:"notify_channels"`
+	ConsumerKey       string   `json:"consumer_key"`
+	ConsumerSecret    string   `json:"consumer_secret"`
+	AccessToken       string   `json:"access_token"`
+	AccessTokenSecret string   `json:"access_token_secret"`
 }
 
 func Init(moduleSet *modules.ModuleSet) {
@@ -75,7 +76,7 @@ func (m *Module) Load(client *irc.Client) error {
 
 func (m *Module) tweetCmd(client *irc.Client, msg irc.Message) error {
 	splited := strings.Fields(msg.Data)
-	if len(splited) < 2 || splited[0] != "!tweet" || !client.IsConnected(msg.Receiver) {
+	if len(splited) < 2 || splited[0] != "!tweet" || !m.allowed(msg.Receiver) {
 		return nil
 	}
 
@@ -90,7 +91,7 @@ func (m *Module) tweetCmd(client *irc.Client, msg irc.Message) error {
 
 func (m *Module) replyCmd(client *irc.Client, msg irc.Message) error {
 	splited := strings.Fields(msg.Data)
-	if len(splited) < 3 || splited[0] != "!reply" || !client.IsConnected(msg.Receiver) {
+	if len(splited) < 3 || splited[0] != "!reply" || !m.allowed(msg.Receiver) {
 		return nil
 	}
 
@@ -113,7 +114,7 @@ func (m *Module) replyCmd(client *irc.Client, msg irc.Message) error {
 
 func (m *Module) retweetCmd(client *irc.Client, msg irc.Message) error {
 	splited := strings.Fields(msg.Data)
-	if len(splited) < 2 || splited[0] != "!retweet" || !client.IsConnected(msg.Receiver) {
+	if len(splited) < 2 || splited[0] != "!retweet" || !m.allowed(msg.Receiver) {
 		return nil
 	}
 
@@ -132,7 +133,7 @@ func (m *Module) retweetCmd(client *irc.Client, msg irc.Message) error {
 
 func (m *Module) favoriteCmd(client *irc.Client, msg irc.Message) error {
 	splited := strings.Fields(msg.Data)
-	if len(splited) < 2 || splited[0] != "!favorite" || !client.IsConnected(msg.Receiver) {
+	if len(splited) < 2 || splited[0] != "!favorite" || !m.allowed(msg.Receiver) {
 		return nil
 	}
 
@@ -153,8 +154,18 @@ func (m *Module) favoriteCmd(client *irc.Client, msg irc.Message) error {
 
 func (m *Module) notify(client *irc.Client, tweet anaconda.Tweet) {
 	text := strings.Replace(tweet.Text, "\n", " ", -1)
-	for _, ch := range client.Channels {
+	for _, ch := range m.NotifyChans {
 		client.Write("NOTICE %s :Tweet %d by %s: %s",
 			ch, tweet.Id, tweet.User.ScreenName, text)
 	}
+}
+
+func (m *Module) allowed(sender string) bool {
+	for _, c := range m.NotifyChans {
+		if c == sender {
+			return true
+		}
+	}
+
+	return false
 }

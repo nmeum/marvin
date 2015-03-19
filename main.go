@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
+	"github.com/nmeum/marvin/modules/date"
 	"github.com/nmeum/marvin/modules/nickserv"
 	"github.com/nmeum/marvin/modules/remind"
 	"github.com/nmeum/marvin/modules/twitter"
@@ -55,6 +56,7 @@ var moduleInits = []moduleInit{
 	nickserv.Init,
 	twitter.Init,
 	remind.Init,
+	date.Init,
 	url.Init,
 }
 

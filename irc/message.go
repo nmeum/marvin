@@ -31,6 +31,10 @@ type Message struct {
 
 func parseMessage(line string) Message {
 	msg := Message{}
+	if len(strings.Fields(line)) < 2 {
+		return msg
+	}
+
 	if strings.HasPrefix(line, ":") {
 		idx := strings.Index(line, " ")
 		msg.Sender = Sender{Name: line[1:idx]}

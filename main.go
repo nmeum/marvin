@@ -21,11 +21,6 @@ import (
 	"fmt"
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
-	"github.com/nmeum/marvin/modules/date"
-	"github.com/nmeum/marvin/modules/nickserv"
-	"github.com/nmeum/marvin/modules/remind"
-	"github.com/nmeum/marvin/modules/twitter"
-	"github.com/nmeum/marvin/modules/url"
 	"io/ioutil"
 	"log"
 	"net"
@@ -49,16 +44,6 @@ var (
 	verb = flag.Bool("v", false, "verbose output")
 	port = flag.Int("p", 6697, "port")
 )
-
-type moduleInit func(*modules.ModuleSet)
-
-var moduleInits = []moduleInit{
-	nickserv.Init,
-	twitter.Init,
-	remind.Init,
-	date.Init,
-	url.Init,
-}
 
 func main() {
 	flag.Parse()

@@ -84,18 +84,21 @@ func main() {
 			logger.Println(err)
 		}
 
-		scanner := bufio.NewScanner(conn)
-		for scanner.Scan() {
-			data := scanner.Text()
-			if *verb {
-				fmt.Println(data)
+		reader := bufio.NewReader(conn)
+		for {
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				break
 			}
 
-			ircBot.Handle(data, errChan)
-		}
+			line = strings.Trim(line, "\n")
+			line = strings.Trim(line, "\r")
 
-		if err := scanner.Err(); err != nil {
-			logger.Println(err)
+			if *verb {
+				fmt.Println(line)
+			}
+
+			ircBot.Handle(line, errChan)
 		}
 
 		conn = reconnect(conn)

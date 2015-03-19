@@ -29,10 +29,9 @@ type Message struct {
 	Data     string
 }
 
-func parseMessage(line string) Message {
-	msg := Message{}
+func parseMessage(line string) (msg Message) {
 	if len(strings.Fields(line)) < 2 {
-		return msg
+		return
 	}
 
 	if strings.HasPrefix(line, ":") {
@@ -63,5 +62,5 @@ func parseMessage(line string) Message {
 	}
 
 	msg.Data = strings.TrimSpace(msg.Data)
-	return msg
+	return
 }

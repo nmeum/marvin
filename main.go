@@ -46,7 +46,7 @@ var (
 	host = flag.String("h", "irc.hackint.eu", "host")
 	cert = flag.String("c", "", "certificate")
 	verb = flag.Bool("v", false, "verbose output")
-	port = flag.Int("p", 6667, "port")
+	port = flag.Int("p", 6697, "port")
 )
 
 type moduleInit func(*modules.ModuleSet)

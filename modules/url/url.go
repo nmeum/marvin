@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -104,7 +105,12 @@ func (m *Module) infoString(resp *http.Response) string {
 
 	csize := resp.Header.Get("Content-Length")
 	if len(csize) > 0 {
-		infos = append(infos, fmt.Sprintf("Size: %s bytes", csize))
+		size, err := strconv.Atoi(csize)
+		if err == nil {
+			infos = append(infos, fmt.Sprintf("Size: %s", m.humanize(size)))
+		} else {
+			infos = append(infos, fmt.Sprintf("Size: %s bytes", csize))
+		}
 	}
 
 	if mtype == "text/html" {
@@ -162,4 +168,19 @@ func (m *Module) isExcluded(host string) bool {
 	}
 
 	return false
+}
+
+func (m *Module) humanize(c int) string {
+	switch {
+	case c > (1 << 40):
+		return fmt.Sprintf("%v TiB", c/(1<<40))
+	case c > (1 << 30):
+		return fmt.Sprintf("%v GiB", c/(1<<30))
+	case c > (1 << 20):
+		return fmt.Sprintf("%v MiB", c/(1<<20))
+	case c > (1 << 10):
+		return fmt.Sprintf("%v KiB", c/(1<<10))
+	default:
+		return fmt.Sprintf("%v B", c)
+	}
 }

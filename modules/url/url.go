@@ -28,10 +28,7 @@ import (
 	"strings"
 )
 
-var (
-	headerError  = errors.New("missing content-type header")
-	extractError = errors.New("couldn't extract title")
-)
+var extractError = errors.New("couldn't extract title")
 
 type Module struct {
 	re      *regexp.Regexp
@@ -84,40 +81,45 @@ func (m *Module) urlCmd(client *irc.Client, msg irc.Message) error {
 	}
 	defer resp.Body.Close()
 
-	info, err := m.infoString(resp)
-	if err != nil {
-		return err
+	info := m.infoString(resp)
+	if len(info) <= 0 {
+		return nil
 	}
 
 	return client.Write("NOTICE %s :%s", msg.Receiver, info)
 }
 
-func (m *Module) infoString(resp *http.Response) (info string, err error) {
+func (m *Module) infoString(resp *http.Response) string {
+	var mtype string
+	var infos []string
+
 	ctype := resp.Header.Get("Content-Type")
-	if len(ctype) <= 0 {
-		err = headerError
-		return
+	if len(ctype) > 0 {
+		m, _, err := mime.ParseMediaType(ctype)
+		if err == nil {
+			mtype = m
+			infos = append(infos, fmt.Sprintf("Type: %s", mtype))
+		}
 	}
 
-	mtype, _, err := mime.ParseMediaType(ctype)
-	if err != nil {
-		return
-	}
-
-	info = fmt.Sprintf("URL -- Type: %s", mtype)
 	csize := resp.Header.Get("Content-Length")
 	if len(csize) > 0 {
-		info = fmt.Sprintf("%s. Size: %s bytes", info, csize)
+		infos = append(infos, fmt.Sprintf("Size: %s bytes", csize))
 	}
 
 	if mtype == "text/html" {
 		title, err := m.extractTitle(resp.Body)
 		if err == nil {
-			info = fmt.Sprintf("%s. Title: %s", info, title)
+			infos = append(infos, fmt.Sprintf("Title: %s", title))
 		}
 	}
 
-	return
+	info := strings.Join(infos, ". ")
+	if len(info) > 0 {
+		info = fmt.Sprintf("%s -- %s", strings.ToUpper(m.Name()), info)
+	}
+
+	return info
 }
 
 func (m *Module) extractTitle(body io.ReadCloser) (title string, err error) {

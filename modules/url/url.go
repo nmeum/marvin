@@ -32,8 +32,7 @@ var extractError = errors.New("couldn't extract title")
 
 type Module struct {
 	regex    *regexp.Regexp
-	RegexStr string   `json:"regex"`
-	Exclude  []string `json:"exclude"`
+	RegexStr string `json:"regex"`
 }
 
 func Init(moduleSet *modules.ModuleSet) {
@@ -144,7 +143,6 @@ func (m *Module) extractTitle(reader io.Reader) (title string, err error) {
 
 	parseFunc(doc)
 	title = m.sanitize(title)
-
 	if len(title) <= 0 {
 		return "", extractError
 	}

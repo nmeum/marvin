@@ -11,7 +11,7 @@
 // You should have received a copy of the GNU Affero General Public
 // License along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-package date
+package time
 
 import (
 	"github.com/nmeum/marvin/irc"
@@ -30,11 +30,11 @@ func Init(moduleSet *modules.ModuleSet) {
 }
 
 func (m *Module) Name() string {
-	return "date"
+	return "time"
 }
 
 func (m *Module) Help() string {
-	return "USAGE: !date || !uptime"
+	return "USAGE: !time || !uptime"
 }
 
 func (m *Module) Defaults() {
@@ -53,7 +53,7 @@ func (m *Module) Load(client *irc.Client) error {
 }
 
 func (m *Module) dateCmd(client *irc.Client, msg irc.Message) error {
-	if msg.Data != "!date" {
+	if msg.Data != "!time" {
 		return nil
 	}
 

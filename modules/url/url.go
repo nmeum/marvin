@@ -15,10 +15,13 @@ package url
 
 import (
 	"errors"
+	"fmt"
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
 	"html"
+	"io"
 	"io/ioutil"
+	"mime"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -26,11 +29,12 @@ import (
 )
 
 var (
-	urlRegex   = `(http|https)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*`
-	extractErr = errors.New("couldn't extract title")
+	headerError  = errors.New("missing content-type header")
+	extractError = errors.New("couldn't extract title")
 )
 
 type Module struct {
+	re      *regexp.Regexp
 	Regex   string   `json:"regex"`
 	Exclude []string `json:"exclude"`
 }
@@ -48,33 +52,104 @@ func (m *Module) Help() string {
 }
 
 func (m *Module) Defaults() {
-	m.Regex = urlRegex
+	m.Regex = `(http|https)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*`
 }
 
 func (m *Module) Load(client *irc.Client) error {
-	regex := regexp.MustCompile(m.Regex)
-	client.CmdHook("privmsg", func(c *irc.Client, msg irc.Message) error {
-		link := regex.FindString(msg.Data)
-		if len(link) <= 0 {
-			return nil
-		}
+	re, err := regexp.Compile(m.Regex)
+	if err != nil {
+		return err
+	}
 
-		uri, err := url.Parse(link)
-		if err != nil {
-			return err
-		}
-
-		if err == nil && !m.isExcluded(uri.Host) {
-			title, err := m.extractTitle(link)
-			if err == nil {
-				c.Write("NOTICE %s :Page title: %s", msg.Receiver, title)
-			}
-		}
-
-		return nil
-	})
+	m.re = re
+	client.CmdHook("privmsg", m.urlCmd)
 
 	return nil
+}
+
+func (m *Module) urlCmd(client *irc.Client, msg irc.Message) error {
+	link := m.re.FindString(msg.Data)
+	if len(link) <= 0 {
+		return nil
+	}
+
+	purl, err := url.Parse(link)
+	if err != nil || m.isExcluded(purl.Host) {
+		return nil
+	}
+
+	resp, err := http.Get(purl.String())
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	info, err := m.infoString(resp)
+	if err != nil {
+		return err
+	}
+
+	return client.Write("NOTICE %s :%s", msg.Receiver, info)
+}
+
+func (m *Module) infoString(resp *http.Response) (info string, err error) {
+	ctype := resp.Header.Get("Content-Type")
+	if len(ctype) <= 0 {
+		err = headerError
+		return
+	}
+
+	mtype, _, err := mime.ParseMediaType(ctype)
+	if err != nil {
+		return
+	}
+
+	info = fmt.Sprintf("URL -- Type: %s", mtype)
+	csize := resp.Header.Get("Content-Length")
+	if len(csize) > 0 {
+		info = fmt.Sprintf("%s. Size: %s bytes", info, csize)
+	}
+
+	if mtype == "text/html" {
+		title, err := m.extractTitle(resp.Body)
+		if err == nil {
+			info = fmt.Sprintf("%s. Title: %s", info, title)
+		}
+	}
+
+	return
+}
+
+func (m *Module) extractTitle(body io.ReadCloser) (title string, err error) {
+	data, err := ioutil.ReadAll(body)
+	if err != nil {
+		return
+	}
+
+	regex := regexp.MustCompile("(?is)<title>(.+)</title>")
+	match := regex.Find(data)
+	if len(match) <= 0 {
+		return "", extractError
+	}
+
+	title = string(match)
+	title = title[len("<title>"):strings.Index(title, "</title>")]
+
+	title = m.sanitize(html.UnescapeString(title))
+	if len(title) <= 0 {
+		return "", extractError
+	}
+
+	return
+}
+
+func (m *Module) sanitize(title string) string {
+	normalized := strings.Replace(title, "\n", " ", -1)
+	for strings.Contains(normalized, "  ") {
+		normalized = strings.Replace(normalized, "  ", " ", -1)
+	}
+
+	return strings.TrimSpace(normalized)
 }
 
 func (m *Module) isExcluded(host string) bool {
@@ -85,42 +160,4 @@ func (m *Module) isExcluded(host string) bool {
 	}
 
 	return false
-}
-
-func (m *Module) extractTitle(uri string) (title string, err error) {
-	resp, err := http.Get(uri)
-	if err != nil {
-		return
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
-
-	regex := regexp.MustCompile("(?is)<title>(.+)</title>")
-	match := regex.FindSubmatch(body)
-
-	if len(match) < 2 {
-		err = extractErr
-		return
-	}
-
-	title = m.normalize(string(match[1]))
-	if len(title) <= 0 {
-		err = extractErr
-		return
-	}
-
-	return
-}
-
-func (m *Module) normalize(title string) string {
-	normalized := html.UnescapeString(strings.Replace(title, "\n", " ", -1))
-	for strings.Contains(normalized, "  ") {
-		normalized = strings.Replace(normalized, "  ", " ", -1)
-	}
-
-	return strings.TrimSpace(normalized)
 }

@@ -107,8 +107,6 @@ func (m *Module) infoString(resp *http.Response) string {
 		size, err := strconv.Atoi(csize)
 		if err == nil {
 			infos = append(infos, fmt.Sprintf("Size: %s", m.humanize(size)))
-		} else {
-			infos = append(infos, fmt.Sprintf("Size: %s B", csize))
 		}
 	}
 

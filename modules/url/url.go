@@ -49,7 +49,7 @@ func (m *Module) Help() string {
 }
 
 func (m *Module) Defaults() {
-	m.RegexStr = `(http|https)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*`
+	m.RegexStr = `(?i)\b((http|https)\://(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s` + "`" + `!()\[\]{};:'".,<>?«»“”‘’]))`
 }
 
 func (m *Module) Load(client *irc.Client) error {

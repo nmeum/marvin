@@ -25,6 +25,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 var extractError = errors.New("couldn't extract title")
@@ -152,12 +153,20 @@ func (m *Module) extractTitle(reader io.Reader) (title string, err error) {
 }
 
 func (m *Module) sanitize(input string) string {
-	normalized := strings.Replace(input, "\n", " ", -1)
-	for strings.Contains(normalized, "  ") {
-		normalized = strings.Replace(normalized, "  ", " ", -1)
+	mfunc := func(r rune) rune {
+		if !unicode.IsPrint(r) {
+			return ' '
+		}
+
+		return r
 	}
 
-	return strings.TrimSpace(normalized)
+	sanitized := strings.Map(mfunc, input)
+	for strings.Contains(sanitized, "  ") {
+		sanitized = strings.Replace(sanitized, "  ", " ", -1)
+	}
+
+	return strings.TrimSpace(sanitized)
 }
 
 func (m *Module) humanize(count int) string {

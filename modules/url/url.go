@@ -22,7 +22,6 @@ import (
 	"io"
 	"mime"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -65,17 +64,12 @@ func (m *Module) Load(client *irc.Client) error {
 }
 
 func (m *Module) urlCmd(client *irc.Client, msg irc.Message) error {
-	link := m.regex.FindString(msg.Data)
-	if len(link) <= 0 {
+	url := m.regex.FindString(msg.Data)
+	if len(url) <= 0 {
 		return nil
 	}
 
-	purl, err := url.Parse(link)
-	if err != nil || m.isExcluded(purl.Host) {
-		return nil
-	}
-
-	resp, err := http.Get(purl.String())
+	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
@@ -164,16 +158,6 @@ func (m *Module) sanitize(title string) string {
 	}
 
 	return strings.TrimSpace(normalized)
-}
-
-func (m *Module) isExcluded(host string) bool {
-	for _, h := range m.Exclude {
-		if host == h {
-			return true
-		}
-	}
-
-	return false
 }
 
 func (m *Module) humanize(c int) string {

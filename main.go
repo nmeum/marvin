@@ -75,6 +75,7 @@ func main() {
 		for {
 			line, err := reader.ReadString('\n')
 			if err != nil {
+				logger.Println(err)
 				break
 			}
 

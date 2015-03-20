@@ -109,7 +109,7 @@ func (m *Module) infoString(resp *http.Response) string {
 		if err == nil {
 			infos = append(infos, fmt.Sprintf("Size: %s", m.humanize(size)))
 		} else {
-			infos = append(infos, fmt.Sprintf("Size: %s bytes", csize))
+			infos = append(infos, fmt.Sprintf("Size: %s B", csize))
 		}
 	}
 

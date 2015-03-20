@@ -31,9 +31,9 @@ import (
 var extractError = errors.New("couldn't extract title")
 
 type Module struct {
-	re      *regexp.Regexp
-	Regex   string   `json:"regex"`
-	Exclude []string `json:"exclude"`
+	regex    *regexp.Regexp
+	RegexStr string   `json:"regex"`
+	Exclude  []string `json:"exclude"`
 }
 
 func Init(moduleSet *modules.ModuleSet) {
@@ -49,23 +49,23 @@ func (m *Module) Help() string {
 }
 
 func (m *Module) Defaults() {
-	m.Regex = `(http|https)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*`
+	m.RegexStr = `(http|https)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*`
 }
 
 func (m *Module) Load(client *irc.Client) error {
-	regex, err := regexp.Compile(m.Regex)
+	regex, err := regexp.Compile(m.RegexStr)
 	if err != nil {
 		return err
 	}
 
-	m.re = regex
+	m.regex = regex
 	client.CmdHook("privmsg", m.urlCmd)
 
 	return nil
 }
 
 func (m *Module) urlCmd(client *irc.Client, msg irc.Message) error {
-	link := m.re.FindString(msg.Data)
+	link := m.regex.FindString(msg.Data)
 	if len(link) <= 0 {
 		return nil
 	}

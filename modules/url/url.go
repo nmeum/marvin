@@ -53,12 +53,12 @@ func (m *Module) Defaults() {
 }
 
 func (m *Module) Load(client *irc.Client) error {
-	re, err := regexp.Compile(m.Regex)
+	regex, err := regexp.Compile(m.Regex)
 	if err != nil {
 		return err
 	}
 
-	m.re = re
+	m.re = regex
 	client.CmdHook("privmsg", m.urlCmd)
 
 	return nil

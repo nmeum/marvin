@@ -114,7 +114,7 @@ func (m *Module) infoString(resp *http.Response) string {
 		}
 	}
 
-	info := strings.Join(infos, ". ")
+	info := strings.Join(infos, " | ")
 	if len(info) > 0 {
 		info = fmt.Sprintf("%s -- %s", strings.ToUpper(m.Name()), info)
 	}

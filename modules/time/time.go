@@ -57,7 +57,7 @@ func (m *Module) dateCmd(client *irc.Client, msg irc.Message) error {
 		return nil
 	}
 
-	return client.Write("PRIVMSG %s :%s",
+	return client.Write("NOTICE %s :%s",
 		msg.Receiver, time.Now().Format(m.Format))
 }
 
@@ -67,6 +67,6 @@ func (m *Module) uptimeCmd(client *irc.Client, msg irc.Message) error {
 	}
 
 	duration := time.Now().Sub(m.startup)
-	return client.Write("PRIVMSG %s :%s",
+	return client.Write("NOTICE %s :%s",
 		msg.Receiver, duration.String())
 }

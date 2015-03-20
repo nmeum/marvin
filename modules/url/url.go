@@ -151,8 +151,8 @@ func (m *Module) extractTitle(reader io.Reader) (title string, err error) {
 	return
 }
 
-func (m *Module) sanitize(title string) string {
-	normalized := strings.Replace(title, "\n", " ", -1)
+func (m *Module) sanitize(input string) string {
+	normalized := strings.Replace(input, "\n", " ", -1)
 	for strings.Contains(normalized, "  ") {
 		normalized = strings.Replace(normalized, "  ", " ", -1)
 	}
@@ -160,17 +160,17 @@ func (m *Module) sanitize(title string) string {
 	return strings.TrimSpace(normalized)
 }
 
-func (m *Module) humanize(c int) string {
+func (m *Module) humanize(count int) string {
 	switch {
-	case c > (1 << 40):
-		return fmt.Sprintf("%v TiB", c/(1<<40))
-	case c > (1 << 30):
-		return fmt.Sprintf("%v GiB", c/(1<<30))
-	case c > (1 << 20):
-		return fmt.Sprintf("%v MiB", c/(1<<20))
-	case c > (1 << 10):
-		return fmt.Sprintf("%v KiB", c/(1<<10))
+	case count > (1 << 40):
+		return fmt.Sprintf("%v TiB", count/(1<<40))
+	case count > (1 << 30):
+		return fmt.Sprintf("%v GiB", count/(1<<30))
+	case count > (1 << 20):
+		return fmt.Sprintf("%v MiB", count/(1<<20))
+	case count > (1 << 10):
+		return fmt.Sprintf("%v KiB", count/(1<<10))
 	default:
-		return fmt.Sprintf("%v B", c)
+		return fmt.Sprintf("%v B", count)
 	}
 }

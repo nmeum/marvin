@@ -18,9 +18,8 @@ import (
 	"fmt"
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
-	"html"
+	"golang.org/x/net/html"
 	"io"
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"net/url"
@@ -128,22 +127,31 @@ func (m *Module) infoString(resp *http.Response) string {
 	return info
 }
 
-func (m *Module) extractTitle(body io.ReadCloser) (title string, err error) {
-	data, err := ioutil.ReadAll(body)
+func (m *Module) extractTitle(reader io.Reader) (title string, err error) {
+	doc, err := html.Parse(reader)
 	if err != nil {
 		return
 	}
 
-	regex := regexp.MustCompile("(?is)<title>(.+)</title>")
-	match := regex.Find(data)
-	if len(match) <= 0 {
-		return "", extractError
+	var parseFunc func(n *html.Node)
+	parseFunc = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "title" {
+			child := n.FirstChild
+			if child != nil {
+				title = html.UnescapeString(child.Data)
+			} else {
+				return
+			}
+		}
+
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			parseFunc(c)
+		}
 	}
 
-	title = string(match)
-	title = title[len("<title>"):strings.Index(title, "</title>")]
+	parseFunc(doc)
+	title = m.sanitize(title)
 
-	title = m.sanitize(html.UnescapeString(title))
 	if len(title) <= 0 {
 		return "", extractError
 	}

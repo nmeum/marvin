@@ -70,7 +70,7 @@ func (m *Module) urlCmd(client *irc.Client, msg irc.Message) error {
 	if err != nil {
 		return err
 	}
-	resp.Body.Close()
+	resp.Body.Close() // HEAD response doesn't have a body
 
 	info := m.infoString(resp)
 	if len(info) <= 0 {

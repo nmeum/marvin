@@ -19,7 +19,6 @@ import (
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
 	"golang.org/x/net/html"
-	"io"
 	"mime"
 	"net/http"
 	"regexp"
@@ -27,8 +26,6 @@ import (
 	"strings"
 	"unicode"
 )
-
-var extractError = errors.New("couldn't extract title")
 
 type Module struct {
 	regex    *regexp.Regexp
@@ -69,11 +66,11 @@ func (m *Module) urlCmd(client *irc.Client, msg irc.Message) error {
 		return nil
 	}
 
-	resp, err := http.Get(url)
+	resp, err := http.Head(url)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	resp.Body.Close()
 
 	info := m.infoString(resp)
 	if len(info) <= 0 {
@@ -105,7 +102,7 @@ func (m *Module) infoString(resp *http.Response) string {
 	}
 
 	if mtype == "text/html" {
-		title, err := m.extractTitle(resp.Body)
+		title, err := m.extractTitle(resp.Request.URL.String())
 		if err == nil {
 			infos = append(infos, fmt.Sprintf("Title: %s", title))
 		}
@@ -119,8 +116,14 @@ func (m *Module) infoString(resp *http.Response) string {
 	return info
 }
 
-func (m *Module) extractTitle(reader io.Reader) (title string, err error) {
-	doc, err := html.Parse(reader)
+func (m *Module) extractTitle(url string) (title string, err error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	doc, err := html.Parse(resp.Body)
 	if err != nil {
 		return
 	}
@@ -144,7 +147,8 @@ func (m *Module) extractTitle(reader io.Reader) (title string, err error) {
 	parseFunc(doc)
 	title = m.sanitize(title)
 	if len(title) <= 0 {
-		return "", extractError
+		err = errors.New("couldn't extract title")
+		return
 	}
 
 	return

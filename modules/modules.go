@@ -85,7 +85,7 @@ func (m *ModuleSet) findModule(name string) Module {
 }
 
 func (m *ModuleSet) helpCmd(client *irc.Client, msg irc.Message) error {
-	if msg.Data != "!help" && len(m.modules) >= 1 {
+	if msg.Data != "!help" || len(m.modules) <= 0 {
 		return nil
 	}
 

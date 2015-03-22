@@ -59,6 +59,8 @@ func (m *ModuleSet) LoadAll() error {
 			if err := json.Unmarshal(data, &module); err != nil {
 				return err
 			}
+		} else if !os.IsNotExist(err) {
+			return err
 		}
 
 		if err := module.Load(m.client); err != nil {

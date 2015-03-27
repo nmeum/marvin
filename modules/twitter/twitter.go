@@ -100,6 +100,7 @@ func (m *Module) replyCmd(client *irc.Client, msg irc.Message) error {
 
 	status := strings.Join(splited[2:], " ")
 	if !strings.Contains(status, "@") {
+		// TODO automatically add username
 		return client.Write("NOTICE %s :ERROR: %s",
 			msg.Receiver, "A reply must contain a @mention")
 	}

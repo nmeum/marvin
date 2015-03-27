@@ -66,7 +66,7 @@ func main() {
 	}()
 
 	for {
-		ircBot, err := setup(conn, flag.Args())
+		ircBot, err := setup(&conn, flag.Args())
 		if err != nil {
 			logger.Println(err)
 		}
@@ -93,8 +93,8 @@ func main() {
 	}
 }
 
-func setup(conn net.Conn, channels []string) (client *irc.Client, err error) {
-	client = irc.NewClient(&conn)
+func setup(conn *net.Conn, channels []string) (client *irc.Client, err error) {
+	client = irc.NewClient(conn)
 	client.CmdHook("ping", func(c *irc.Client, m irc.Message) error {
 		return c.Write("PONG %s", m.Data)
 	})

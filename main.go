@@ -100,7 +100,7 @@ func setup(conn *net.Conn, channels []string) (client *irc.Client, err error) {
 	})
 
 	client.CmdHook("001", func(c *irc.Client, m irc.Message) error {
-		time.Sleep(3 * time.Second)
+		time.Sleep(3 * time.Second) // Wait for NickServ etc
 		return c.Write("JOIN %s", strings.Join(channels, ","))
 	})
 

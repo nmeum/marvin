@@ -20,9 +20,7 @@ import (
 )
 
 type Module struct {
-	startup time.Time
-	Format  string `json:"format"`
-	Uptime  bool   `json:"uptime"`
+	Format string `json:"format"`
 }
 
 func Init(moduleSet *modules.ModuleSet) {
@@ -34,39 +32,23 @@ func (m *Module) Name() string {
 }
 
 func (m *Module) Help() string {
-	return "USAGE: !time || !uptime"
+	return "USAGE: !time"
 }
 
 func (m *Module) Defaults() {
 	m.Format = time.RFC1123
-	m.Uptime = true
 }
 
 func (m *Module) Load(client *irc.Client) error {
-	if m.Uptime {
-		m.startup = time.Now()
-		client.CmdHook("privmsg", m.uptimeCmd)
-	}
-
-	client.CmdHook("privmsg", m.dateCmd)
+	client.CmdHook("privmsg", m.timeCmd)
 	return nil
 }
 
-func (m *Module) dateCmd(client *irc.Client, msg irc.Message) error {
+func (m *Module) timeCmd(client *irc.Client, msg irc.Message) error {
 	if msg.Data != "!time" {
 		return nil
 	}
 
 	return client.Write("NOTICE %s :%s",
 		msg.Receiver, time.Now().Format(m.Format))
-}
-
-func (m *Module) uptimeCmd(client *irc.Client, msg irc.Message) error {
-	if msg.Data != "!uptime" {
-		return nil
-	}
-
-	duration := time.Now().Sub(m.startup)
-	return client.Write("NOTICE %s :%s",
-		msg.Receiver, duration.String())
 }

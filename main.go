@@ -99,13 +99,15 @@ func setup(conn *net.Conn, channels []string) (client *irc.Client, err error) {
 		return c.Write("PONG %s", m.Data)
 	})
 
-	joinCmd := func(c *irc.Client, m irc.Message) error {
+	client.CmdHook("001", func(c *irc.Client, m irc.Message) error {
 		time.Sleep(3 * time.Second)
 		return c.Write("JOIN %s", strings.Join(channels, ","))
-	}
+	})
 
-	client.CmdHook("001", joinCmd)
-	client.CmdHook("kick", joinCmd)
+	client.CmdHook("kick", func(c *irc.Client, m irc.Message) error {
+		params := strings.Fields(m.Receiver)
+		return c.Write("JOIN %s", params[0])
+	})
 
 	client.Write("USER %s %s * :%s", *nick, *host, *name)
 	client.Write("NICK %s", *nick)

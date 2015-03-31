@@ -17,6 +17,7 @@ import (
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
+	"html"
 	"net/url"
 	"strconv"
 	"strings"
@@ -100,7 +101,6 @@ func (m *Module) replyCmd(client *irc.Client, msg irc.Message) error {
 
 	status := strings.Join(splited[2:], " ")
 	if !strings.Contains(status, "@") {
-		// TODO automatically add username
 		return client.Write("NOTICE %s :ERROR: %s",
 			msg.Receiver, "A reply must contain a @mention")
 	}
@@ -150,15 +150,20 @@ func (m *Module) favoriteCmd(client *irc.Client, msg irc.Message) error {
 	}
 
 	return client.Write("NOTICE %s :Favorited tweet %d by %s: %s",
-		msg.Receiver, tweet.Id, tweet.User.ScreenName, tweet.Text)
+		msg.Receiver, tweet.Id, tweet.User.ScreenName, m.sanitize(tweet.Text))
 }
 
 func (m *Module) notify(client *irc.Client, tweet anaconda.Tweet) {
-	text := strings.Replace(tweet.Text, "\n", " ", -1)
 	for _, ch := range m.NotifyChans {
 		client.Write("NOTICE %s :Tweet %d by %s: %s",
-			ch, tweet.Id, tweet.User.ScreenName, text)
+			ch, tweet.Id, tweet.User.ScreenName, m.sanitize(tweet.Text))
 	}
+}
+
+func (m *Module) sanitize(text string) string {
+	sanitized := html.UnescapeString(text)
+	sanitized = strings.Replace(sanitized, "\n", " ", -1)
+	return strings.TrimSpace(sanitized)
 }
 
 func (m *Module) allowed(sender string) bool {

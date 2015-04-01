@@ -38,6 +38,7 @@ func NewClient(conn *net.Conn) *Client {
 	c.CmdHook("kick", c.kickCmd)
 	c.CmdHook("quit", c.quitCmd)
 
+	c.CmdHook("ping", c.pingCmd)
 	return c
 }
 
@@ -107,4 +108,8 @@ func (c *Client) kickCmd(client *Client, msg Message) error {
 func (c *Client) quitCmd(client *Client, msg Message) error {
 	c.Channels = []string{}
 	return nil
+}
+
+func (c *Client) pingCmd(client *Client, msg Message) error {
+	return c.Write("PONG %s", msg.Data)
 }

@@ -49,6 +49,7 @@ func (m *Module) timeCmd(client *irc.Client, msg irc.Message) error {
 		return nil
 	}
 
+	now := time.Now().UTC()
 	return client.Write("NOTICE %s :%s",
-		msg.Receiver, time.Now().Format(m.Format))
+		msg.Receiver, now.Format(m.Format))
 }

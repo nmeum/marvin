@@ -16,13 +16,15 @@ package irc
 import (
 	"fmt"
 	"net"
+	"strings"
 )
 
 type Hook func(*Client, Message) error
 
 type Client struct {
-	conn  *net.Conn
-	hooks map[string][]Hook
+	conn     *net.Conn
+	hooks    map[string][]Hook
+	Channels []string
 }
 
 func NewClient(conn *net.Conn) *Client {
@@ -30,6 +32,11 @@ func NewClient(conn *net.Conn) *Client {
 		conn:  conn,
 		hooks: make(map[string][]Hook),
 	}
+
+	c.CmdHook("join", c.joinCmd)
+	c.CmdHook("part", c.partCmd)
+	c.CmdHook("kick", c.kickCmd)
+	c.CmdHook("quit", c.quitCmd)
 
 	return c
 }
@@ -59,4 +66,45 @@ func (c *Client) Handle(data string, ch chan error) {
 
 func (c *Client) CmdHook(cmd string, hook Hook) {
 	c.hooks[cmd] = append(c.hooks[cmd], hook)
+}
+
+func (c *Client) Connected(channel string) bool {
+	for _, c := range c.Channels {
+		if c == channel {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (c *Client) remove(channel string) {
+	var newChans []string
+	for _, c := range c.Channels {
+		if c != channel {
+			newChans = append(newChans, c)
+		}
+	}
+
+	c.Channels = newChans
+}
+
+func (c *Client) joinCmd(client *Client, msg Message) error {
+	c.Channels = append(c.Channels, msg.Data)
+	return nil
+}
+
+func (c *Client) partCmd(client *Client, msg Message) error {
+	c.remove(msg.Data)
+	return nil
+}
+
+func (c *Client) kickCmd(client *Client, msg Message) error {
+	c.remove(strings.Fields(msg.Receiver)[0])
+	return nil
+}
+
+func (c *Client) quitCmd(client *Client, msg Message) error {
+	c.Channels = []string{}
+	return nil
 }

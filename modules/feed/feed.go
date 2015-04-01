@@ -123,7 +123,7 @@ func (m *Module) fetchFeed(url string) (feed feedparser.Feed, err error) {
 
 func (m *Module) notify(client *irc.Client, item feedparser.Item) {
 	for _, ch := range client.Channels {
-		client.Write("NOTICE %s :%s -- New item: %s -- %s",
+		client.Write("NOTICE %s :%s -- %s -- %s",
 			ch, strings.ToUpper(m.Name()), item.Title, item.Link)
 	}
 }

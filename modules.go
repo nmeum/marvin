@@ -15,6 +15,7 @@ package main
 
 import (
 	"github.com/nmeum/marvin/modules"
+	"github.com/nmeum/marvin/modules/feed"
 	"github.com/nmeum/marvin/modules/nickserv"
 	"github.com/nmeum/marvin/modules/remind"
 	"github.com/nmeum/marvin/modules/time"
@@ -29,5 +30,6 @@ var moduleInits = []moduleInit{
 	twitter.Init,
 	remind.Init,
 	time.Init,
+	feed.Init,
 	url.Init,
 }

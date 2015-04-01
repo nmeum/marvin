@@ -68,7 +68,7 @@ func main() {
 	for {
 		ircBot, err := setup(&conn, flag.Args())
 		if err != nil {
-			logger.Println(err)
+			logger.Fatal(err)
 		}
 
 		reader := bufio.NewReader(conn)

@@ -50,6 +50,11 @@ func (m *Module) Defaults() {
 }
 
 func (m *Module) Load(client *irc.Client) error {
+	m.feeds = make(map[string]time.Time)
+	for _, url := range m.URLs {
+		m.feeds[url] = time.Now()
+	}
+
 	duration, err := time.ParseDuration(m.Interval)
 	if err != nil {
 		return err
@@ -83,10 +88,7 @@ func (m *Module) pollFeeds(out chan feedparser.Item) {
 				return
 			}
 
-			latest, ok := m.feeds[u]
-			if !ok {
-				latest = time.Now()
-			}
+			latest := m.feeds[u]
 			m.feeds[u] = feed.Items[0].Date
 
 			for _, i := range feed.Items {

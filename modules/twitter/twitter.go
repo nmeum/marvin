@@ -17,11 +17,14 @@ import (
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
+	"github.com/nmeum/marvin/modules/veto"
 	"html"
 	"net/url"
 	"strconv"
 	"strings"
 )
+
+var vetoModule = new(veto.Module)
 
 type Module struct {
 	api               *anaconda.TwitterApi
@@ -33,6 +36,7 @@ type Module struct {
 
 func Init(moduleSet *modules.ModuleSet) {
 	moduleSet.Register(new(Module))
+	moduleSet.Register(vetoModule)
 }
 
 func (m *Module) Name() string {
@@ -80,6 +84,10 @@ func (m *Module) tweetCmd(client *irc.Client, msg irc.Message) error {
 		return nil
 	}
 
+	if !m.runVeto(client, msg) {
+		return nil
+	}
+
 	status := strings.Join(splited[1:], " ")
 	if _, err := m.api.PostTweet(status, url.Values{}); err != nil {
 		return client.Write("NOTICE %s :ERROR: %s",
@@ -104,6 +112,10 @@ func (m *Module) replyCmd(client *irc.Client, msg irc.Message) error {
 			msg.Receiver, "A reply must contain a @mention")
 	}
 
+	if !m.runVeto(client, msg) {
+		return nil
+	}
+
 	if _, err := m.api.PostTweet(status, values); err != nil {
 		return client.Write("NOTICE %s :ERROR: %s",
 			msg.Receiver, err.Error())
@@ -121,6 +133,10 @@ func (m *Module) retweetCmd(client *irc.Client, msg irc.Message) error {
 	id, err := strconv.Atoi(splited[1])
 	if err != nil {
 		return err
+	}
+
+	if !m.runVeto(client, msg) {
+		return nil
 	}
 
 	if _, err := m.api.Retweet(int64(id), false); err != nil {
@@ -163,4 +179,11 @@ func (m *Module) sanitize(text string) string {
 	sanitized := html.UnescapeString(text)
 	sanitized = strings.Replace(sanitized, "\n", " ", -1)
 	return strings.TrimSpace(sanitized)
+}
+
+func (m *Module) runVeto(client *irc.Client, msg irc.Message) bool {
+	client.Write("NOTICE %s :You have %s to reject this tweet using !vote",
+		msg.Receiver, vetoModule.DurationStr)
+
+	return vetoModule.Start()
 }

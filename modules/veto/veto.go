@@ -15,7 +15,6 @@ package veto
 
 import (
 	"github.com/nmeum/marvin/irc"
-	"github.com/nmeum/marvin/modules"
 	"time"
 )
 
@@ -23,10 +22,6 @@ type Module struct {
 	timer       *time.Timer
 	duration    time.Duration
 	DurationStr string `json:"duration"`
-}
-
-func Init(moduleSet *modules.ModuleSet) {
-	moduleSet.Register(new(Module))
 }
 
 func (m *Module) Name() string {

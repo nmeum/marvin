@@ -90,6 +90,7 @@ func main() {
 		}
 
 		conn = reconnect(conn)
+		defer conn.Close()
 	}
 }
 
@@ -152,12 +153,14 @@ func connect(network, address string) (conn net.Conn, err error) {
 }
 
 func reconnect(c net.Conn) (conn net.Conn) {
-	addr := c.RemoteAddr()
-	c.Close()
+	network := c.RemoteAddr().Network()
+	address := c.RemoteAddr().String()
 
 	var err error
+	c.Close()
+
 	for i := 1; ; i++ {
-		conn, err = connect(addr.Network(), addr.String())
+		conn, err = connect(network, address)
 		if err == nil {
 			break
 		}

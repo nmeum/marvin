@@ -55,20 +55,20 @@ func (m *Module) Start() bool {
 	ret := false
 	m.timer = time.AfterFunc(m.duration, func() {
 		ret = true
+		m.timer = nil
 	})
 
 	return ret
 }
 
 func (m *Module) vetoCmd(client *irc.Client, msg irc.Message) error {
-	if msg.Data != "!veto" {
+	if msg.Data != "!veto" && m.timer != nil {
 		return nil
 	}
 
-	if m.timer != nil && m.timer.Stop() {
-		return client.Write("NOTICE %s :%s has invoked his right to veto",
-			msg.Receiver, msg.Sender.Name)
-	}
+	m.timer.Stop()
+	m.timer = nil
 
-	return client.Write("NOTICE %s :%s", msg.Receiver, "no vote takes place currently")
+	return client.Write("NOTICE %s :%s has invoked his right to veto.",
+		msg.Receiver, msg.Sender.Name)
 }

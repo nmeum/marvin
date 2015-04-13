@@ -182,7 +182,7 @@ func (m *Module) sanitize(text string) string {
 }
 
 func (m *Module) runVeto(client *irc.Client, msg irc.Message) bool {
-	client.Write("NOTICE %s :You have %s to reject this tweet using !veto",
+	client.Write("NOTICE %s :You have %s to reject this tweet using !vote",
 		msg.Receiver, vetoModule.DurationStr)
 
 	return vetoModule.Start()

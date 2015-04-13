@@ -25,6 +25,7 @@ import (
 
 type Module struct {
 	api               *anaconda.TwitterApi
+	ReadOnly          bool   `json:"read_only"`
 	ConsumerKey       string `json:"consumer_key"`
 	ConsumerSecret    string `json:"consumer_secret"`
 	AccessToken       string `json:"access_token"`
@@ -44,7 +45,7 @@ func (m *Module) Help() string {
 }
 
 func (m *Module) Defaults() {
-	return
+	m.ReadOnly = false
 }
 
 func (m *Module) Load(client *irc.Client) error {
@@ -52,10 +53,12 @@ func (m *Module) Load(client *irc.Client) error {
 	anaconda.SetConsumerSecret(m.ConsumerSecret)
 	m.api = anaconda.NewTwitterApi(m.AccessToken, m.AccessTokenSecret)
 
-	client.CmdHook("privmsg", m.tweetCmd)
-	client.CmdHook("privmsg", m.replyCmd)
-	client.CmdHook("privmsg", m.retweetCmd)
-	client.CmdHook("privmsg", m.favoriteCmd)
+	if !m.ReadOnly {
+		client.CmdHook("privmsg", m.tweetCmd)
+		client.CmdHook("privmsg", m.replyCmd)
+		client.CmdHook("privmsg", m.retweetCmd)
+		client.CmdHook("privmsg", m.favoriteCmd)
+	}
 
 	values := url.Values{}
 	values.Add("replies", "all")

@@ -15,8 +15,6 @@ package feed
 
 import (
 	"github.com/nmeum/go-feedparser"
-	"github.com/nmeum/go-feedparser/atom"
-	"github.com/nmeum/go-feedparser/rss"
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
 	"net/http"
@@ -24,8 +22,6 @@ import (
 	"sync"
 	"time"
 )
-
-var parsers = []feedparser.FeedFunc{rss.Parse, atom.Parse}
 
 type Module struct {
 	feeds    map[string]time.Time
@@ -89,10 +85,10 @@ func (m *Module) pollFeeds(out chan feedparser.Item) {
 			}
 
 			latest := m.feeds[u]
-			m.feeds[u] = feed.Items[0].Date
+			m.feeds[u] = feed.Items[0].PubDate
 
 			for _, i := range feed.Items {
-				if i.Date.Before(latest) || i.Date.Equal(latest) {
+				if i.PubDate.Before(latest) || i.PubDate.Equal(latest) {
 					break
 				}
 
@@ -113,7 +109,7 @@ func (m *Module) fetchFeed(url string) (feed feedparser.Feed, err error) {
 	reader := resp.Body
 	defer reader.Close()
 
-	feed, err = feedparser.Parse(reader, parsers)
+	feed, err = feedparser.Parse(reader)
 	if err != nil {
 		return
 	}

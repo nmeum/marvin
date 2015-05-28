@@ -65,36 +65,31 @@ func main() {
 		}
 	}()
 
+	ircBot, err := setup(conn, flag.Args())
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	reader := bufio.NewReader(conn)
 	for {
-		ircBot, err := setup(&conn, flag.Args())
+		line, err := reader.ReadString('\n')
 		if err != nil {
-			logger.Fatal(err)
+			logger.Println(err)
+			break
 		}
 
-		reader := bufio.NewReader(conn)
-		for {
-			line, err := reader.ReadString('\n')
-			if err != nil {
-				logger.Println(err)
-				break
-			}
+		line = strings.Trim(line, "\n")
+		line = strings.Trim(line, "\r")
 
-			line = strings.Trim(line, "\n")
-			line = strings.Trim(line, "\r")
-
-			if *verb {
-				fmt.Println(line)
-			}
-
-			ircBot.Handle(line, errChan)
+		if *verb {
+			fmt.Println(line)
 		}
 
-		conn = reconnect(conn)
-		defer conn.Close()
+		ircBot.Handle(line, errChan)
 	}
 }
 
-func setup(conn *net.Conn, channels []string) (client *irc.Client, err error) {
+func setup(conn net.Conn, channels []string) (client *irc.Client, err error) {
 	client = irc.NewClient(conn)
 	client.CmdHook("001", func(c *irc.Client, m irc.Message) error {
 		time.Sleep(3 * time.Second) // Wait for NickServ etc
@@ -150,23 +145,4 @@ func connect(network, address string) (conn net.Conn, err error) {
 	}
 
 	return net.Dial(network, address)
-}
-
-func reconnect(c net.Conn) (conn net.Conn) {
-	network := c.RemoteAddr().Network()
-	address := c.RemoteAddr().String()
-
-	var err error
-	c.Close()
-
-	for i := 1; ; i++ {
-		conn, err = connect(network, address)
-		if err == nil {
-			break
-		}
-
-		time.Sleep(time.Duration(i*3) * time.Second)
-	}
-
-	return
 }

@@ -25,34 +25,29 @@ import (
 	"log"
 	"net"
 	"os"
-	"os/user"
-	"path/filepath"
 	"strings"
 	"time"
 )
 
 const (
-	appName  = "marvin"
-	appUsage = "[options] CHANNEL..."
+	appName = "marvin"
 )
 
 var (
-	nick = flag.String("n", "marvin", "nickname")
-	name = flag.String("r", "Marvin Bot", "realname")
-	host = flag.String("h", "irc.hackint.eu", "host")
-	cert = flag.String("c", "", "certificate")
+	conf = flag.String("c", "marvin.json", "configuration file")
 	verb = flag.Bool("v", false, "verbose output")
-	port = flag.Int("p", 6697, "port")
 )
 
 func main() {
 	flag.Parse()
 	logger := log.New(os.Stderr, "ERROR: ", 0)
-	if flag.NArg() < 1 {
-		logger.Fatalf("USAGE: %s %s", appName, appUsage)
+
+	config, err := readConfig(*conf)
+	if err != nil && !os.IsNotExist(err) {
+		logger.Fatal(err)
 	}
 
-	conn, err := connect("tcp", fmt.Sprintf("%s:%d", *host, *port))
+	conn, err := connect(config)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -65,7 +60,7 @@ func main() {
 		}
 	}()
 
-	ircBot, err := setup(conn, flag.Args())
+	ircBot, err := setup(conn, config)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -89,11 +84,11 @@ func main() {
 	}
 }
 
-func setup(conn net.Conn, channels []string) (client *irc.Client, err error) {
+func setup(conn net.Conn, config Config) (client *irc.Client, err error) {
 	client = irc.NewClient(conn)
 	client.CmdHook("001", func(c *irc.Client, m irc.Message) error {
 		time.Sleep(3 * time.Second) // Wait for NickServ etc
-		return c.Write("JOIN %s", strings.Join(channels, ","))
+		return c.Write("JOIN %s", strings.Join(config.Chan, ","))
 	})
 
 	client.CmdHook("kick", func(c *irc.Client, m irc.Message) error {
@@ -101,38 +96,23 @@ func setup(conn net.Conn, channels []string) (client *irc.Client, err error) {
 		return c.Write("JOIN %s", params[0])
 	})
 
-	client.Write("USER %s %s * :%s", *nick, *host, *name)
-	client.Write("NICK %s", *nick)
+	client.Write("USER %s %s * :%s", config.Nick, config.Host, config.Name)
+	client.Write("NICK %s", config.Nick)
 
-	if err = initializeModules(client); err != nil {
-		return
-	}
-
-	return
-}
-
-func initializeModules(c *irc.Client) error {
-	config := os.Getenv("XDG_CONFIG_HOME")
-	if len(config) <= 0 {
-		user, err := user.Current()
-		if err != nil {
-			return err
-		}
-
-		config = filepath.Join(user.HomeDir, ".config")
-	}
-
-	moduleSet := modules.NewModuleSet(c, filepath.Join(config, appName))
+	moduleSet := modules.NewModuleSet(client, config.Conf)
 	for _, fn := range moduleInits {
 		fn(moduleSet)
 	}
 
-	return moduleSet.LoadAll()
+	return client, moduleSet.LoadAll()
 }
 
-func connect(network, address string) (conn net.Conn, err error) {
-	if len(*cert) >= 1 {
-		certFile, err := ioutil.ReadFile(*cert)
+func connect(config Config) (conn net.Conn, err error) {
+	netw := "tcp"
+	addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
+
+	if len(config.Cert) >= 1 {
+		certFile, err := ioutil.ReadFile(config.Cert)
 		if err != nil {
 			return nil, err
 		}
@@ -141,8 +121,8 @@ func connect(network, address string) (conn net.Conn, err error) {
 		caCertPool.AppendCertsFromPEM(certFile)
 
 		config := &tls.Config{RootCAs: caCertPool}
-		return tls.Dial(network, address, config)
+		return tls.Dial(netw, addr, config)
 	}
 
-	return net.Dial(network, address)
+	return net.Dial(netw, addr)
 }

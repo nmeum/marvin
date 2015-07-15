@@ -24,6 +24,8 @@ type Hook func(*Client, Message) error
 type Client struct {
 	conn     net.Conn
 	hooks    map[string][]Hook
+	Nickname string
+	Realname string
 	Channels []string
 }
 
@@ -36,10 +38,17 @@ func NewClient(conn net.Conn) *Client {
 	c.CmdHook("join", c.joinCmd)
 	c.CmdHook("part", c.partCmd)
 	c.CmdHook("kick", c.kickCmd)
-	c.CmdHook("quit", c.quitCmd)
 
 	c.CmdHook("ping", c.pingCmd)
 	return c
+}
+
+func (c *Client) Setup(nick, name, host string) {
+	c.Nickname = nick
+	c.Realname = name
+
+	c.Write("USER %s %s * :%s", c.Nickname, host, c.Realname)
+	c.Write("NICK %s", c.Nickname)
 }
 
 func (c *Client) Write(format string, argv ...interface{}) error {
@@ -91,26 +100,26 @@ func (c *Client) remove(channel string) {
 }
 
 func (c *Client) joinCmd(client *Client, msg Message) error {
-	channel := msg.Data
-	if !Connected(channel) {
-		c.Channels = append(c.Channels, channel)
+	if msg.Sender.Name == c.Nickname {
+		c.Channels = append(c.Channels, msg.Data)
 	}
 
 	return nil
 }
 
 func (c *Client) partCmd(client *Client, msg Message) error {
-	c.remove(msg.Data)
+	if msg.Sender.Name == c.Nickname {
+		c.remove(msg.Data)
+	}
+
 	return nil
 }
 
 func (c *Client) kickCmd(client *Client, msg Message) error {
-	c.remove(strings.Fields(msg.Receiver)[0])
-	return nil
-}
+	if msg.Data == c.Nickname {
+		c.remove(strings.Fields(msg.Receiver)[0])
+	}
 
-func (c *Client) quitCmd(client *Client, msg Message) error {
-	c.Channels = []string{}
 	return nil
 }
 

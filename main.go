@@ -91,19 +91,12 @@ func setup(conn net.Conn, config Config) (client *irc.Client, err error) {
 		return c.Write("JOIN %s", strings.Join(config.Chan, ","))
 	})
 
-	client.CmdHook("kick", func(c *irc.Client, m irc.Message) error {
-		params := strings.Fields(m.Receiver)
-		return c.Write("JOIN %s", params[0])
-	})
-
-	client.Write("USER %s %s * :%s", config.Nick, config.Host, config.Name)
-	client.Write("NICK %s", config.Nick)
-
 	moduleSet := modules.NewModuleSet(client, config.Conf)
 	for _, fn := range moduleInits {
 		fn(moduleSet)
 	}
 
+	client.Setup(config.Nick, config.Name, config.Host)
 	return client, moduleSet.LoadAll()
 }
 

@@ -91,7 +91,7 @@ func (m *ModuleSet) helpCmd(client *irc.Client, msg irc.Message) error {
 	}
 
 	return client.Write("NOTICE %s :%s", msg.Receiver,
-		"Use !help MODULE to see the help for a given use !modules to list all modules")
+		"Use !help MODULE to see the help message for the given module, use !modules to list all modules.")
 }
 
 func (m *ModuleSet) modulesCmd(client *irc.Client, msg irc.Message) error {

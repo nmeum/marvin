@@ -21,7 +21,7 @@ CONFIGURATION
 	The core configuration file allows you to specify mandatory
 	information for the bot, e.g. which network to connect to, which
 	username to use, which channels to join, et cetera. The
-	available configuration variables are documented in the `Config
+	available configuration variables are documented in the `config
 	struct` defined in the file `config.go`.
 
 MODULES

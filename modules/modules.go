@@ -70,6 +70,7 @@ func (m *ModuleSet) LoadAll() error {
 
 	m.client.CmdHook("privmsg", m.helpCmd)
 	m.client.CmdHook("privmsg", m.moduleCmd)
+	m.client.CmdHook("privmsg", m.modulesCmd)
 
 	return nil
 }
@@ -85,7 +86,16 @@ func (m *ModuleSet) findModule(name string) Module {
 }
 
 func (m *ModuleSet) helpCmd(client *irc.Client, msg irc.Message) error {
-	if msg.Data != "!help" || len(m.modules) <= 0 {
+	if msg.Data != "!help" {
+		return nil
+	}
+
+	return client.Write("NOTICE %s :%s", msg.Receiver,
+		"Use !help MODULE to see the help for a given use !modules to list all modules")
+}
+
+func (m *ModuleSet) modulesCmd(client *irc.Client, msg irc.Message) error {
+	if msg.Data != "!modules" || len(m.modules) <= 0 {
 		return nil
 	}
 

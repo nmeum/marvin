@@ -40,7 +40,7 @@ func (m *Module) Name() string {
 }
 
 func (m *Module) Help() string {
-	return "Displays HTML titles for HTTP links."
+	return "Displays information about posted URLs."
 }
 
 func (m *Module) Defaults() {

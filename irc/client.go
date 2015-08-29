@@ -15,8 +15,10 @@ package irc
 
 import (
 	"fmt"
+	"html"
 	"net"
 	"strings"
+	"unicode"
 )
 
 type Hook func(*Client, Message) error
@@ -62,7 +64,7 @@ func (c *Client) Connected(channel string) bool {
 }
 
 func (c *Client) Write(format string, argv ...interface{}) error {
-	_, err := fmt.Fprintf(c.conn, "%s\r\n", fmt.Sprintf(format, argv...))
+	_, err := fmt.Fprintf(c.conn, "%s\r\n", fmt.Sprintf(sanitize(format), argv...))
 	if err != nil {
 		return err
 	}
@@ -115,6 +117,21 @@ func kickCmd(client *Client, msg Message) error {
 
 func pingCmd(client *Client, msg Message) error {
 	return client.Write("PONG %s", msg.Data)
+}
+
+// sanitize removes all non-printable characters from
+// the given string by returning a new string without them.
+func sanitize(text string) string {
+	mfunc := func(r rune) rune {
+		if unicode.IsPrint(r) {
+			return r
+		}
+
+		return ' '
+	}
+
+	escaped := strings.Map(mfunc, html.UnescapeString(text))
+	return strings.Join(strings.Fields(escaped), " ")
 }
 
 // remove deletes a given element from a given slice. A new slice

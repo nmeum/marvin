@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"unicode"
 )
 
 type Module struct {
@@ -141,30 +140,12 @@ func (m *Module) extractTitle(url string) (title string, err error) {
 	}
 
 	parseFunc(doc)
-	title = m.sanitize(title)
 	if len(title) <= 0 {
 		err = errors.New("couldn't extract title")
 		return
 	}
 
 	return
-}
-
-func (m *Module) sanitize(input string) string {
-	mfunc := func(r rune) rune {
-		if !unicode.IsPrint(r) {
-			return ' '
-		}
-
-		return r
-	}
-
-	sanitized := strings.Map(mfunc, input)
-	for strings.Contains(sanitized, "  ") {
-		sanitized = strings.Replace(sanitized, "  ", " ", -1)
-	}
-
-	return strings.TrimSpace(sanitized)
 }
 
 func (m *Module) humanize(count int64) string {

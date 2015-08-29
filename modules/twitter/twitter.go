@@ -180,8 +180,8 @@ func (m *Module) formatEvent(event interface{}) string {
 			break
 		}
 
-		msg = fmt.Sprintf("@%s favorited tweet %d: %s",
-			t.Source.ScreenName, t.TargetObject.Id, t.TargetObject.Text)
+		msg = fmt.Sprintf("@%s favorited tweet %d by @%s: %s",
+			t.Source.ScreenName, t.TargetObject.Id, t.Target.ScreenName, t.TargetObject.Text)
 	}
 
 	return msg

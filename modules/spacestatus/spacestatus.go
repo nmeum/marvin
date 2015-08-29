@@ -15,6 +15,7 @@ package spacestatus
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
 	"io/ioutil"
@@ -23,7 +24,11 @@ import (
 	"time"
 )
 
+// Supported SpaceAPI version
+const apiVersion = "0.13"
+
 type spaceapi struct {
+	api   string `json:"api"`
 	space string `json:"space"`
 	state struct {
 		open bool `json:"open"`
@@ -32,7 +37,7 @@ type spaceapi struct {
 
 type Module struct {
 	api      *spaceapi
-	URL      string `json:"urls"`
+	URL      string `json:"url"`
 	Notify   bool   `json:"notify"`
 	Interval string `json:"interval"`
 }
@@ -64,10 +69,18 @@ func (m *Module) Load(client *irc.Client) error {
 		return err
 	}
 
+	if err := m.updateHandler(client); err != nil {
+		return err
+	}
+
+	if m.api.api != apiVersion {
+		return errors.New("Unsupported SpaceAPI version")
+	}
+
 	go func(c *irc.Client) {
 		for {
-			m.updateHandler(c)
 			time.Sleep(duration)
+			m.updateHandler(c)
 		}
 	}(client)
 
@@ -88,12 +101,8 @@ func (m *Module) updateHandler(client *irc.Client) error {
 		return err
 	}
 
-	if firstPoll {
-		return nil
-	}
-
 	newState := m.api.state.open
-	if newState != oldState && m.Notify {
+	if newState != oldState && m.Notify && !firstPoll {
 		m.notify(client, newState)
 	}
 
@@ -112,7 +121,7 @@ func (m *Module) pollStatus() error {
 		return err
 	}
 
-	if err := json.Unmarshal(data, m.api); err != nil {
+	if err := json.Unmarshal(data, &m.api); err != nil {
 		return err
 	}
 
@@ -125,7 +134,8 @@ func (m *Module) statusCmd(client *irc.Client, msg irc.Message) error {
 	}
 
 	if m.api == nil {
-		return client.Write("NOTICE %s: Status is currently unknown.")
+		return client.Write("NOTICE %s: Status currently unknown.",
+			msg.Receiver)
 	}
 
 	var state string

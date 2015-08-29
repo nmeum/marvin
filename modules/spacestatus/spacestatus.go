@@ -59,21 +59,19 @@ func (m *Module) Load(client *irc.Client) error {
 		return nil
 	}
 
-	client.CmdHook("privmsg", m.statusCmd)
-	if !m.Notify {
-		duration, err := time.ParseDuration(m.Interval)
-		if err != nil {
-			return err
-		}
-
-		go func(c *irc.Client) {
-			for {
-				m.updateHandler(c)
-				time.Sleep(duration)
-			}
-		}(client)
+	duration, err := time.ParseDuration(m.Interval)
+	if err != nil {
+		return err
 	}
 
+	go func(c *irc.Client) {
+		for {
+			m.updateHandler(c)
+			time.Sleep(duration)
+		}
+	}(client)
+
+	client.CmdHook("privmsg", m.statusCmd)
 	return nil
 }
 
@@ -90,7 +88,7 @@ func (m *Module) updateHandler(client *irc.Client) error {
 	}
 
 	newState := m.api.state.open
-	if newState != oldState {
+	if newState != oldState && m.Notify {
 		m.notify(client, newState)
 	}
 
@@ -119,6 +117,10 @@ func (m *Module) pollStatus() error {
 func (m *Module) statusCmd(client *irc.Client, msg irc.Message) error {
 	if msg.Data != "!spacestatus" {
 		return nil
+	}
+
+	if m.api == nil {
+		return client.Write("NOTICE %s: Status is currently unknown.")
 	}
 
 	var state string

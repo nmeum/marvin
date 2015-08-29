@@ -170,7 +170,7 @@ func (m *Module) formatEvent(event interface{}) string {
 	var msg string
 	switch t := event.(type) {
 	case anaconda.ApiError:
-		msg = fmt.Sprintf("API error %d: %s", t.StatusCode, t.Decoded.Error())
+		msg = fmt.Sprintf("Twitter API error %d: %s", t.StatusCode, t.Decoded.Error())
 	case anaconda.Tweet:
 		msg = fmt.Sprintf("Tweet %d by @%s: %s", t.Id, t.User.ScreenName, t.Text)
 	case anaconda.StatusDeletionNotice:
@@ -189,7 +189,6 @@ func (m *Module) formatEvent(event interface{}) string {
 
 func (m *Module) notify(client *irc.Client, text string) {
 	for _, ch := range client.Channels {
-		client.Write("NOTICE %s :%s -- %s",
-			ch, strings.ToUpper(m.Name()), text)
+		client.Write("NOTICE %s :%s", ch, text)
 	}
 }

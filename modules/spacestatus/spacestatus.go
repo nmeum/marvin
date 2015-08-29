@@ -83,8 +83,13 @@ func (m *Module) updateHandler(client *irc.Client) error {
 		oldState = m.api.state.open
 	}
 
+	firstPoll := m.api == nil
 	if err := m.pollStatus(); err != nil {
 		return err
+	}
+
+	if firstPoll {
+		return nil
 	}
 
 	newState := m.api.state.open

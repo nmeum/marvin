@@ -14,6 +14,7 @@
 package twitter
 
 import (
+	"fmt"
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
@@ -64,15 +65,11 @@ func (m *Module) Load(client *irc.Client) error {
 	values.Add("replies", "all")
 	values.Add("with", "user")
 
-	stream := m.api.UserStream(values)
-	go func(c *irc.Client, s anaconda.Stream) {
-		for i := range s.C {
-			t, ok := i.(anaconda.Tweet)
-			if ok {
-				m.notify(c, t)
-			}
+	go func(client *irc.Client, values url.Values) {
+		for {
+			m.streamHandler(client, values)
 		}
-	}(client, stream)
+	}(client, values)
 
 	return nil
 }
@@ -145,20 +142,58 @@ func (m *Module) favoriteCmd(client *irc.Client, msg irc.Message) error {
 		return err
 	}
 
-	tweet, err := m.api.Favorite(int64(id))
-	if err != nil {
+	if _, err := m.api.Favorite(int64(id)); err != nil {
 		return client.Write("NOTICE %s :ERROR: %s",
 			msg.Receiver, err.Error())
 	}
 
-	return client.Write("NOTICE %s :Favorited tweet %d by %s: %s",
-		msg.Receiver, tweet.Id, tweet.User.ScreenName, m.sanitize(tweet.Text))
+	return nil
 }
 
-func (m *Module) notify(client *irc.Client, tweet anaconda.Tweet) {
+func (m *Module) streamHandler(client *irc.Client, values url.Values) {
+	stream := m.api.UserStream(values)
+	for {
+		var msg string
+		select {
+		case event := <-stream.C:
+			msg = m.formatEvent(event)
+		case <-stream.Quit:
+			break
+		}
+
+		if len(msg) > 0 {
+			m.notify(client, msg)
+		}
+	}
+}
+
+func (m *Module) formatEvent(event interface{}) string {
+	var msg string
+	switch t := event.(type) {
+	case anaconda.ApiError:
+		msg = fmt.Sprintf("API error %d: %s",
+			t.StatusCode, t.Decoded.Error())
+	case anaconda.Tweet:
+		msg = fmt.Sprintf("Tweet %d by @%s: %s",
+			t.Id, t.User.ScreenName, m.sanitize(t.Text))
+	case anaconda.EventTweet:
+		if t.Event.Event != "favorite" {
+			break
+		}
+
+		msg = fmt.Sprintf("@%s favorited tweet %d: %s",
+			t.Source.ScreenName, t.TargetObject.Id, m.sanitize(t.TargetObject.Text))
+	case anaconda.StatusDeletionNotice:
+		msg = fmt.Sprintf("Tweet %d has been deleted", t.Id)
+	}
+
+	return msg
+}
+
+func (m *Module) notify(client *irc.Client, text string) {
 	for _, ch := range client.Channels {
-		client.Write("NOTICE %s :Tweet %d by %s: %s",
-			ch, tweet.Id, tweet.User.ScreenName, m.sanitize(tweet.Text))
+		client.Write("NOTICE %s :%s -- %s",
+			ch, strings.ToUpper(m.Name()), text)
 	}
 }
 

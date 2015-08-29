@@ -23,6 +23,11 @@ import (
 	"time"
 )
 
+type post struct {
+	Feed feedparser.Feed
+	Item feedparser.Item
+}
+
 type Module struct {
 	feeds    map[string]time.Time
 	URLs     []string `json:"urls"`
@@ -56,24 +61,24 @@ func (m *Module) Load(client *irc.Client) error {
 		return err
 	}
 
-	newItems := make(chan feedparser.Item)
+	newPosts := make(chan post)
 	go func() {
-		for item := range newItems {
-			m.notify(client, item)
+		for post := range newPosts {
+			m.notify(client, post)
 		}
 	}()
 
 	go func() {
 		for {
 			time.Sleep(duration)
-			m.pollFeeds(newItems)
+			m.pollFeeds(newPosts)
 		}
 	}()
 
 	return nil
 }
 
-func (m *Module) pollFeeds(out chan feedparser.Item) {
+func (m *Module) pollFeeds(out chan post) {
 	var wg sync.WaitGroup
 	for _, url := range m.URLs {
 		wg.Add(1)
@@ -85,15 +90,15 @@ func (m *Module) pollFeeds(out chan feedparser.Item) {
 			}
 
 			latest := m.feeds[u]
-			m.feeds[u] = feed.Items[0].PubDate
-
 			for _, i := range feed.Items {
 				if !i.PubDate.After(latest) {
 					break
 				}
 
-				out <- i
+				out <- post{feed, i}
 			}
+
+			m.feeds[u] = feed.Items[0].PubDate
 		}(url)
 	}
 
@@ -117,9 +122,10 @@ func (m *Module) fetchFeed(url string) (feed feedparser.Feed, err error) {
 	return
 }
 
-func (m *Module) notify(client *irc.Client, item feedparser.Item) {
+func (m *Module) notify(client *irc.Client, post post) {
 	for _, ch := range client.Channels {
-		client.Write("NOTICE %s :%s -- %s -- %s",
-			ch, strings.ToUpper(m.Name()), item.Title, item.Link)
+		item := post.Item
+		client.Write("NOTICE %s :%s -- %s new entry %s: %s",
+			ch, strings.ToUpper(m.Name()), post.Feed.Title, item.Title, item.Link)
 	}
 }

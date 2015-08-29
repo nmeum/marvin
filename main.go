@@ -84,7 +84,7 @@ func main() {
 	}
 }
 
-func setup(conn net.Conn, config Config) (client *irc.Client, err error) {
+func setup(conn net.Conn, config config) (client *irc.Client, err error) {
 	client = irc.NewClient(conn)
 	client.CmdHook("001", func(c *irc.Client, m irc.Message) error {
 		time.Sleep(3 * time.Second) // Wait for NickServ etc
@@ -100,7 +100,7 @@ func setup(conn net.Conn, config Config) (client *irc.Client, err error) {
 	return client, moduleSet.LoadAll()
 }
 
-func connect(config Config) (conn net.Conn, err error) {
+func connect(config config) (conn net.Conn, err error) {
 	netw := "tcp"
 	addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
 

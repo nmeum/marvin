@@ -43,8 +43,8 @@ type config struct {
 	Chan []string `json:"channels"`
 }
 
-func confDefaults() Config {
-	return Config{
+func confDefaults() config {
+	return config{
 		Nick: "marvin",
 		Name: "marvin IRC Bot",
 		Host: "chat.freenode.net",
@@ -53,7 +53,7 @@ func confDefaults() Config {
 	}
 }
 
-func readConfig(path string) (c Config, err error) {
+func readConfig(path string) (c config, err error) {
 	c = confDefaults()
 	data, err := ioutil.ReadFile(path)
 	if err != nil {

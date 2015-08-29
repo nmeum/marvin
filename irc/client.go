@@ -35,11 +35,11 @@ func NewClient(conn net.Conn) *Client {
 		hooks: make(map[string][]Hook),
 	}
 
-	c.CmdHook("join", c.joinCmd)
-	c.CmdHook("part", c.partCmd)
-	c.CmdHook("kick", c.kickCmd)
+	c.CmdHook("join", joinCmd)
+	c.CmdHook("part", partCmd)
+	c.CmdHook("kick", kickCmd)
 
-	c.CmdHook("ping", c.pingCmd)
+	c.CmdHook("ping", pingCmd)
 	return c
 }
 
@@ -49,6 +49,16 @@ func (c *Client) Setup(nick, name, host string) {
 
 	c.Write("USER %s %s * :%s", c.Nickname, host, c.Realname)
 	c.Write("NICK %s", c.Nickname)
+}
+
+func (c *Client) Connected(channel string) bool {
+	for _, c := range c.Channels {
+		if c == channel {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (c *Client) Write(format string, argv ...interface{}) error {
@@ -78,51 +88,44 @@ func (c *Client) CmdHook(cmd string, hook Hook) {
 	c.hooks[cmd] = append(c.hooks[cmd], hook)
 }
 
-func (c *Client) Connected(channel string) bool {
-	for _, c := range c.Channels {
-		if c == channel {
-			return true
+func joinCmd(client *Client, msg Message) error {
+	if msg.Sender.Name == client.Nickname {
+		client.Channels = append(client.Channels, msg.Data)
+	}
+
+	return nil
+}
+
+func partCmd(client *Client, msg Message) error {
+	if msg.Sender.Name == client.Nickname {
+		client.Channels = remove(msg.Data, client.Channels)
+	}
+
+	return nil
+}
+
+func kickCmd(client *Client, msg Message) error {
+	if msg.Data == client.Nickname {
+		target := strings.Fields(msg.Receiver)[0]
+		client.Channels = remove(target, client.Channels)
+	}
+
+	return nil
+}
+
+func pingCmd(client *Client, msg Message) error {
+	return client.Write("PONG %s", msg.Data)
+}
+
+// remove deletes a given element from a given slice. A new slice
+// which does not contain the given element is returned.
+func remove(element string, slice []string) []string {
+	var newSlice []string
+	for _, e := range slice {
+		if e != element {
+			newSlice = append(newSlice, e)
 		}
 	}
 
-	return false
-}
-
-func (c *Client) remove(channel string) {
-	var newChans []string
-	for _, c := range c.Channels {
-		if c != channel {
-			newChans = append(newChans, c)
-		}
-	}
-
-	c.Channels = newChans
-}
-
-func (c *Client) joinCmd(client *Client, msg Message) error {
-	if msg.Sender.Name == c.Nickname {
-		c.Channels = append(c.Channels, msg.Data)
-	}
-
-	return nil
-}
-
-func (c *Client) partCmd(client *Client, msg Message) error {
-	if msg.Sender.Name == c.Nickname {
-		c.remove(msg.Data)
-	}
-
-	return nil
-}
-
-func (c *Client) kickCmd(client *Client, msg Message) error {
-	if msg.Data == c.Nickname {
-		c.remove(strings.Fields(msg.Receiver)[0])
-	}
-
-	return nil
-}
-
-func (c *Client) pingCmd(client *Client, msg Message) error {
-	return c.Write("PONG %s", msg.Data)
+	return newSlice
 }

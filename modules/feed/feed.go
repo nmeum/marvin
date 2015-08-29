@@ -88,9 +88,11 @@ func (m *Module) pollFeeds(out chan feedparser.Item) {
 			m.feeds[u] = feed.Items[0].PubDate
 
 			for _, i := range feed.Items {
-				if i.PubDate.After(latest) {
-					out <- i
+				if !i.PubDate.After(latest) {
+					break
 				}
+
+				out <- i
 			}
 		}(url)
 	}

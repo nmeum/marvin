@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 )
 
-type Config struct {
+type config struct {
 	// Nickname of the irc bot.
 	Nick string `json:"nickname"`
 

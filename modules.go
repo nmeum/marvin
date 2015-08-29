@@ -17,6 +17,7 @@ import (
 	"github.com/nmeum/marvin/modules"
 	"github.com/nmeum/marvin/modules/feed"
 	"github.com/nmeum/marvin/modules/nickserv"
+	"github.com/nmeum/marvin/modules/rejoin"
 	"github.com/nmeum/marvin/modules/remind"
 	"github.com/nmeum/marvin/modules/time"
 	"github.com/nmeum/marvin/modules/twitter"
@@ -28,6 +29,7 @@ type moduleInit func(*modules.ModuleSet)
 var moduleInits = []moduleInit{
 	nickserv.Init,
 	twitter.Init,
+	rejoin.Init,
 	remind.Init,
 	time.Init,
 	feed.Init,

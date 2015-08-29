@@ -22,7 +22,6 @@ import (
 	"mime"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"unicode"
 )
@@ -41,7 +40,7 @@ func (m *Module) Name() string {
 }
 
 func (m *Module) Help() string {
-	return "Displays HTML titles for HTTP links."
+	return "Displays information about posted URLs."
 }
 
 func (m *Module) Defaults() {
@@ -93,12 +92,9 @@ func (m *Module) infoString(resp *http.Response) string {
 		}
 	}
 
-	csize := resp.Header.Get("Content-Length")
-	if len(csize) > 0 {
-		size, err := strconv.Atoi(csize)
-		if err == nil {
-			infos = append(infos, fmt.Sprintf("Size: %s", m.humanize(size)))
-		}
+	csize := resp.ContentLength
+	if csize >= 0 {
+		infos = append(infos, fmt.Sprintf("Size: %s", m.humanize(csize)))
 	}
 
 	if mtype == "text/html" {
@@ -171,7 +167,7 @@ func (m *Module) sanitize(input string) string {
 	return strings.TrimSpace(sanitized)
 }
 
-func (m *Module) humanize(count int) string {
+func (m *Module) humanize(count int64) string {
 	switch {
 	case count > (1 << 40):
 		return fmt.Sprintf("%v TiB", count/(1<<40))

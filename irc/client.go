@@ -123,11 +123,14 @@ func pingCmd(client *Client, msg Message) error {
 // the given string by returning a new string without them.
 func sanitize(text string) string {
 	mfunc := func(r rune) rune {
-		if unicode.IsPrint(r) {
+		switch {
+		case !unicode.isPrint(r):
+			return ' '
+		case unicode.IsSpace(r):
+			return ' '
+		default:
 			return r
 		}
-
-		return ' '
 	}
 
 	escaped := strings.Map(mfunc, html.UnescapeString(text))

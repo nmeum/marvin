@@ -27,10 +27,10 @@ import (
 const apiVersion = "0.13"
 
 type spaceapi struct {
-	api   string `json:"api"`
-	space string `json:"space"`
-	state struct {
-		open bool `json:"open"`
+	API   string `json:"api"`
+	Space string `json:"space"`
+	State struct {
+		Open bool `json:"open"`
 	} `json:"state"`
 }
 
@@ -72,7 +72,7 @@ func (m *Module) Load(client *irc.Client) error {
 		return err
 	}
 
-	if m.api.api != apiVersion {
+	if m.api.API != apiVersion {
 		return errors.New("unsupported spaceapi version")
 	}
 
@@ -92,7 +92,7 @@ func (m *Module) updateHandler(client *irc.Client) error {
 	if m.api == nil {
 		oldState = false
 	} else {
-		oldState = m.api.state.open
+		oldState = m.api.State.Open
 	}
 
 	firstPoll := m.api == nil
@@ -100,7 +100,7 @@ func (m *Module) updateHandler(client *irc.Client) error {
 		return err
 	}
 
-	newState := m.api.state.open
+	newState := m.api.State.Open
 	if newState != oldState && m.Notify && !firstPoll {
 		m.notify(client, newState)
 	}
@@ -130,22 +130,20 @@ func (m *Module) pollStatus() error {
 func (m *Module) statusCmd(client *irc.Client, msg irc.Message) error {
 	if msg.Data != "!spacestatus" {
 		return nil
-	}
-
-	if m.api == nil {
-		return client.Write("NOTICE %s: Status currently unknown.",
+	} else if m.api == nil {
+		return client.Write("NOTICE %s :Status currently unknown.",
 			msg.Receiver)
 	}
 
 	var state string
-	if m.api.state.open {
+	if m.api.State.Open {
 		state = "open"
 	} else {
 		state = "closed"
 	}
 
-	return client.Write("NOTICE %s: %s is currently %s",
-		msg.Receiver, m.api.space, state)
+	return client.Write("NOTICE %s :%s is currently %s",
+		msg.Receiver, m.api.Space, state)
 }
 
 func (m *Module) notify(client *irc.Client, open bool) {
@@ -159,7 +157,7 @@ func (m *Module) notify(client *irc.Client, open bool) {
 	}
 
 	for _, ch := range client.Channels {
-		client.Write("NOTICE %s: %s changed door status from %s to %s",
-			ch, m.api.space, oldState, newState)
+		client.Write("NOTICE %s :%s changed door status from %s to %s",
+			ch, m.api.Space, oldState, newState)
 	}
 }

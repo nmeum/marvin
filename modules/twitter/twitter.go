@@ -152,16 +152,13 @@ func (m *Module) favoriteCmd(client *irc.Client, msg irc.Message) error {
 func (m *Module) streamHandler(client *irc.Client, values url.Values) {
 	stream := m.api.UserStream(values)
 	for {
-		var msg string
 		select {
 		case event := <-stream.C:
-			msg = m.formatEvent(event)
+			if t := m.formatEvent(event); len(t) > 0 {
+				m.notify(client, t)
+			}
 		case <-stream.Quit:
 			break
-		}
-
-		if len(msg) > 0 {
-			m.notify(client, msg)
 		}
 	}
 }

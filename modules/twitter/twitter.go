@@ -172,7 +172,7 @@ func (m *Module) formatEvent(event interface{}) string {
 	case anaconda.ApiError:
 		msg = fmt.Sprintf("Twitter API error %d: %s", t.StatusCode, t.Decoded.Error())
 	case anaconda.Tweet:
-		msg = fmt.Sprintf("Tweet %d by @%s: %s", t.Id, t.User.ScreenName, t.Text)
+		msg = fmt.Sprintf("Tweet %d by %s: %s", t.Id, t.User.ScreenName, t.Text)
 	case anaconda.StatusDeletionNotice:
 		msg = fmt.Sprintf("Tweet %d has been deleted", t.Id)
 	case anaconda.EventTweet:
@@ -180,7 +180,7 @@ func (m *Module) formatEvent(event interface{}) string {
 			break
 		}
 
-		msg = fmt.Sprintf("@%s favorited tweet %d by @%s: %s",
+		msg = fmt.Sprintf("%s favorited tweet %d by %s: %s",
 			t.Source.ScreenName, t.TargetObject.Id, t.Target.ScreenName, t.TargetObject.Text)
 	}
 

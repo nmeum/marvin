@@ -20,7 +20,6 @@ import (
 	"github.com/nmeum/marvin/modules"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -74,7 +73,7 @@ func (m *Module) Load(client *irc.Client) error {
 	}
 
 	if m.api.api != apiVersion {
-		return errors.New("Unsupported SpaceAPI version")
+		return errors.New("unsupported spaceapi version")
 	}
 
 	go func(c *irc.Client) {
@@ -150,18 +149,17 @@ func (m *Module) statusCmd(client *irc.Client, msg irc.Message) error {
 }
 
 func (m *Module) notify(client *irc.Client, open bool) {
-	name := m.api.space
-	for _, ch := range client.Channels {
-		var oldState, newState string
-		if open {
-			oldState = "closed"
-			newState = "open"
-		} else {
-			oldState = "open"
-			newState = "closed"
-		}
+	var oldState, newState string
+	if open {
+		oldState = "closed"
+		newState = "open"
+	} else {
+		oldState = "open"
+		newState = "closed"
+	}
 
-		client.Write("NOTICE %s: %s -- %s changed state from %s to %s",
-			ch, strings.ToUpper(m.Name()), name, oldState, newState)
+	for _, ch := range client.Channels {
+		client.Write("NOTICE %s: %s changed door status from %s to %s",
+			ch, m.api.space, oldState, newState)
 	}
 }

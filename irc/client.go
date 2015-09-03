@@ -124,7 +124,7 @@ func pingCmd(client *Client, msg Message) error {
 func sanitize(text string) string {
 	mfunc := func(r rune) rune {
 		switch {
-		case !unicode.isPrint(r):
+		case !unicode.IsPrint(r):
 			return ' '
 		case unicode.IsSpace(r):
 			return ' '

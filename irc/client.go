@@ -64,7 +64,7 @@ func (c *Client) Connected(channel string) bool {
 }
 
 func (c *Client) Write(format string, argv ...interface{}) error {
-	_, err := fmt.Fprintf(c.conn, "%s\r\n", fmt.Sprintf(sanitize(format), argv...))
+	_, err := fmt.Fprintf(c.conn, "%s\r\n", sanitize(fmt.Sprintf(format, argv...)))
 	if err != nil {
 		return err
 	}

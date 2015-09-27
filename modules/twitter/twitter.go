@@ -18,6 +18,7 @@ import (
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
+	"html"
 	"net/url"
 	"strconv"
 	"strings"
@@ -168,17 +169,19 @@ func (m *Module) formatEvent(event interface{}) string {
 	switch t := event.(type) {
 	case anaconda.ApiError:
 		msg = fmt.Sprintf("Twitter API error %d: %s", t.StatusCode, t.Decoded.Error())
-	case anaconda.Tweet:
-		msg = fmt.Sprintf("Tweet %d by %s: %s", t.Id, t.User.ScreenName, t.Text)
 	case anaconda.StatusDeletionNotice:
 		msg = fmt.Sprintf("Tweet %d has been deleted", t.Id)
+	case anaconda.Tweet:
+		msg = fmt.Sprintf("Tweet %d by %s: %s", t.Id, t.User.ScreenName,
+			html.UnescapeString(t.Text))
 	case anaconda.EventTweet:
 		if t.Event.Event != "favorite" {
 			break
 		}
 
+		text := html.UnescapeString(t.TargetObject.Text)
 		msg = fmt.Sprintf("%s favorited tweet %d by %s: %s",
-			t.Source.ScreenName, t.TargetObject.Id, t.Target.ScreenName, t.TargetObject.Text)
+			t.Source.ScreenName, t.TargetObject.Id, t.Target.ScreenName, text)
 	}
 
 	return msg
@@ -186,6 +189,6 @@ func (m *Module) formatEvent(event interface{}) string {
 
 func (m *Module) notify(client *irc.Client, text string) {
 	for _, ch := range client.Channels {
-		client.Write("NOTICE %s :%s", ch, text)
+		client.Write("NOTICE %s :%s", ch, html.UnescapeString(text))
 	}
 }

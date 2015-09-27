@@ -17,6 +17,7 @@ import (
 	"github.com/nmeum/go-feedparser"
 	"github.com/nmeum/marvin/irc"
 	"github.com/nmeum/marvin/modules"
+	"html"
 	"net/http"
 	"strings"
 	"sync"
@@ -123,9 +124,10 @@ func (m *Module) fetchFeed(url string) (feed feedparser.Feed, err error) {
 }
 
 func (m *Module) notify(client *irc.Client, post post) {
+	ftitle := html.UnescapeString(post.Feed.Title)
 	for _, ch := range client.Channels {
-		item := post.Item
+		ititle := html.UnescapeString(post.Item.Title)
 		client.Write("NOTICE %s :%s -- %s new entry %s: %s",
-			ch, strings.ToUpper(m.Name()), post.Feed.Title, item.Title, item.Link)
+			ch, strings.ToUpper(m.Name()), ftitle, ititle, post.Item.Link)
 	}
 }

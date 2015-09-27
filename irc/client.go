@@ -15,7 +15,6 @@ package irc
 
 import (
 	"fmt"
-	"html"
 	"net"
 	"strings"
 	"unicode"
@@ -133,7 +132,7 @@ func sanitize(text string) string {
 		}
 	}
 
-	escaped := strings.Map(mfunc, html.UnescapeString(text))
+	escaped := strings.Map(mfunc, text)
 	return strings.Join(strings.Fields(escaped), " ")
 }
 

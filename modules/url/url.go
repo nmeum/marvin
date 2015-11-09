@@ -128,7 +128,7 @@ func (m *Module) extractTitle(url string) (title string, err error) {
 		if n.Type == html.ElementNode && n.Data == "title" {
 			child := n.FirstChild
 			if child != nil {
-				title = html.UnescapeString(child.Data)
+				title = child.Data
 			} else {
 				return
 			}

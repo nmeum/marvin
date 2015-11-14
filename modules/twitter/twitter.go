@@ -24,6 +24,9 @@ import (
 	"strings"
 )
 
+// Maximum amount of characters allowed in a tweet.
+const maxChars = 140
+
 type Module struct {
 	api               *anaconda.TwitterApi
 	ReadOnly          bool   `json:"read_only"`
@@ -74,6 +77,20 @@ func (m *Module) Load(client *irc.Client) error {
 	return nil
 }
 
+func (m *Module) tweet(t string, v url.Values, c *irc.Client, p irc.Message) error {
+	tLen := len(t)
+	if tLen > maxChars {
+		return c.Write("NOTICE %s :ERROR: Tweet is too long, remove %d characters",
+			p.Receiver, tLen-maxChars)
+	}
+
+	if _, err := m.api.PostTweet(t, v); err != nil {
+		return c.Write("NOTICE %s :ERROR: %s", p.Receiver, err.Error())
+	}
+
+	return nil
+}
+
 func (m *Module) tweetCmd(client *irc.Client, msg irc.Message) error {
 	splited := strings.Fields(msg.Data)
 	if len(splited) < 2 || splited[0] != "!tweet" || !client.Connected(msg.Receiver) {
@@ -81,12 +98,7 @@ func (m *Module) tweetCmd(client *irc.Client, msg irc.Message) error {
 	}
 
 	status := strings.Join(splited[1:], " ")
-	if _, err := m.api.PostTweet(status, url.Values{}); err != nil {
-		return client.Write("NOTICE %s :ERROR: %s",
-			msg.Receiver, err.Error())
-	}
-
-	return nil
+	return m.tweet(status, url.Values{}, client, msg)
 }
 
 func (m *Module) replyCmd(client *irc.Client, msg irc.Message) error {
@@ -95,21 +107,16 @@ func (m *Module) replyCmd(client *irc.Client, msg irc.Message) error {
 		return nil
 	}
 
-	values := url.Values{}
-	values.Add("in_reply_to_status_id", splited[1])
-
 	status := strings.Join(splited[2:], " ")
 	if !strings.Contains(status, "@") {
 		return client.Write("NOTICE %s :ERROR: %s",
-			msg.Receiver, "A reply must contain a @mention")
+			msg.Receiver, "A reply must contain an @mention")
 	}
 
-	if _, err := m.api.PostTweet(status, values); err != nil {
-		return client.Write("NOTICE %s :ERROR: %s",
-			msg.Receiver, err.Error())
-	}
+	values := url.Values{}
+	values.Add("in_reply_to_status_id", splited[1])
 
-	return nil
+	return m.tweet(status, values, client, msg)
 }
 
 func (m *Module) retweetCmd(client *irc.Client, msg irc.Message) error {

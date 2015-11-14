@@ -65,9 +65,9 @@ func (m *Module) Load(client *irc.Client) error {
 	values.Add("replies", "all")
 	values.Add("with", "user")
 
-	go func(client *irc.Client, values url.Values) {
+	go func(c *irc.Client, v url.Values) {
 		for {
-			m.streamHandler(client, values)
+			m.streamHandler(c, v)
 		}
 	}(client, values)
 
@@ -154,14 +154,18 @@ func (m *Module) streamHandler(client *irc.Client, values url.Values) {
 	stream := m.api.UserStream(values)
 	for {
 		select {
-		case event := <-stream.C:
+		case event, ok := <-stream.C:
+			if !ok {
+				break
+			}
+
 			if t := m.formatEvent(event); len(t) > 0 {
 				m.notify(client, t)
 			}
-		case <-stream.Quit:
-			break
 		}
 	}
+
+	stream.Stop()
 }
 
 func (m *Module) formatEvent(event interface{}) string {

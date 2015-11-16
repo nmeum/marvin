@@ -78,17 +78,15 @@ func (m *Module) Load(client *irc.Client) error {
 }
 
 func (m *Module) tweet(t string, v url.Values, c *irc.Client, p irc.Message) error {
-	tLen := len(t)
-	if tLen > maxChars {
+	_, err := m.api.PostTweet(t, v)
+	if err != nil && len(t) > maxChars {
 		return c.Write("NOTICE %s :ERROR: Tweet is too long, remove %d characters",
-			p.Receiver, tLen-maxChars)
-	}
-
-	if _, err := m.api.PostTweet(t, v); err != nil {
+			p.Receiver, len(t)-maxChars)
+	} else if err != nil {
 		return c.Write("NOTICE %s :ERROR: %s", p.Receiver, err.Error())
+	} else {
+		return nil
 	}
-
-	return nil
 }
 
 func (m *Module) tweetCmd(client *irc.Client, msg irc.Message) error {

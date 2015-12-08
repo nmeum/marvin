@@ -45,7 +45,7 @@ func (m *Module) Name() string {
 }
 
 func (m *Module) Help() string {
-	return "USAGE: !tweet TEXT || !reply ID TEXT || !retweet ID || !favorite ID"
+	return "USAGE: !tweet TEXT || !reply ID TEXT || !directmsg USER TEXT || !retweet ID || !favorite ID"
 }
 
 func (m *Module) Defaults() {
@@ -62,6 +62,7 @@ func (m *Module) Load(client *irc.Client) error {
 		client.CmdHook("privmsg", m.replyCmd)
 		client.CmdHook("privmsg", m.retweetCmd)
 		client.CmdHook("privmsg", m.favoriteCmd)
+		client.CmdHook("privmsg", m.directMsgCmd)
 	}
 
 	values := url.Values{}
@@ -150,6 +151,22 @@ func (m *Module) favoriteCmd(client *irc.Client, msg irc.Message) error {
 	if _, err := m.api.Favorite(int64(id)); err != nil {
 		return client.Write("NOTICE %s :ERROR: %s",
 			msg.Receiver, err.Error())
+	}
+
+	return nil
+}
+
+func (m *Module) directMsgCmd(client *irc.Client, msg irc.Message) error {
+	splited := strings.Fields(msg.Data)
+	if len(splited) < 3 || splited[0] != "!directmsg" || !client.Connected(msg.Receiver) {
+		return nil
+	}
+
+	scname := splited[1]
+	status := strings.Join(splited[2:], " ")
+
+	if _, err := m.api.PostDMToScreenName(status, scname); err != nil {
+		return err
 	}
 
 	return nil

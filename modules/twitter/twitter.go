@@ -166,7 +166,8 @@ func (m *Module) directMsgCmd(client *irc.Client, msg irc.Message) error {
 	status := strings.Join(splited[2:], " ")
 
 	if _, err := m.api.PostDMToScreenName(status, scname); err != nil {
-		return err
+		return client.Write("NOTICE %s :ERROR: %s",
+			msg.Receiver, err.Error())
 	}
 
 	return nil

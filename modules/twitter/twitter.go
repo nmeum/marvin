@@ -219,6 +219,6 @@ func (m *Module) formatEvent(event interface{}) string {
 
 func (m *Module) notify(client *irc.Client, text string) {
 	for _, ch := range client.Channels {
-		client.Write("NOTICE %s :%s", ch, html.UnescapeString(text))
+		client.Write("NOTICE %s :%s", ch, text)
 	}
 }

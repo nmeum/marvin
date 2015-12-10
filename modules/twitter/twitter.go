@@ -200,7 +200,7 @@ func (m *Module) formatEvent(event interface{}) string {
 		msg = fmt.Sprintf("Tweet %d has been deleted", t.Id)
 	case anaconda.DirectMessage:
 		msg = fmt.Sprintf("Direct message %d by %s send to %s: %s", t.Id,
-			t.SenderScreenName, t.RecipientScreenName, t.Text)
+			t.SenderScreenName, t.RecipientScreenName, html.UnescapeString(t.Text))
 	case anaconda.Tweet:
 		msg = fmt.Sprintf("Tweet %d by %s: %s", t.Id, t.User.ScreenName,
 			html.UnescapeString(t.Text))

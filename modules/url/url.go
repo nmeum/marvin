@@ -14,7 +14,6 @@
 package url
 
 import (
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"github.com/nmeum/marvin/irc"
@@ -27,7 +26,6 @@ import (
 )
 
 type Module struct {
-	client   *http.Client
 	regex    *regexp.Regexp
 	RegexStr string `json:"regex"`
 }
@@ -54,11 +52,6 @@ func (m *Module) Load(client *irc.Client) error {
 		return err
 	}
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	m.client = &http.Client{Transport: tr}
-
 	m.regex = regex
 	client.CmdHook("privmsg", m.urlCmd)
 
@@ -71,7 +64,7 @@ func (m *Module) urlCmd(client *irc.Client, msg irc.Message) error {
 		return nil
 	}
 
-	resp, err := m.client.Head(url)
+	resp, err := http.Head(url)
 	if err != nil {
 		return err
 	}
@@ -119,7 +112,7 @@ func (m *Module) infoString(resp *http.Response) string {
 }
 
 func (m *Module) extractTitle(url string) (title string, err error) {
-	resp, err := m.client.Get(url)
+	resp, err := http.Get(url)
 	if err != nil {
 		return
 	}

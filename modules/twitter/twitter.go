@@ -29,6 +29,7 @@ const maxChars = 140
 
 type Module struct {
 	api               *anaconda.TwitterApi
+	user              anaconda.User
 	ReadOnly          bool   `json:"read_only"`
 	ConsumerKey       string `json:"consumer_key"`
 	ConsumerSecret    string `json:"consumer_secret"`
@@ -45,7 +46,7 @@ func (m *Module) Name() string {
 }
 
 func (m *Module) Help() string {
-	return "USAGE: !tweet TEXT || !reply ID TEXT || !directmsg USER TEXT || !retweet ID || !favorite ID"
+	return "USAGE: !tweet TEXT || !reply ID TEXT || !directmsg USER TEXT || !retweet ID || !favorite ID || !stat ID"
 }
 
 func (m *Module) Defaults() {
@@ -55,7 +56,9 @@ func (m *Module) Defaults() {
 func (m *Module) Load(client *irc.Client) error {
 	anaconda.SetConsumerKey(m.ConsumerKey)
 	anaconda.SetConsumerSecret(m.ConsumerSecret)
+
 	m.api = anaconda.NewTwitterApi(m.AccessToken, m.AccessTokenSecret)
+	client.CmdHook("privmsg", m.statCmd)
 
 	if !m.ReadOnly {
 		client.CmdHook("privmsg", m.tweetCmd)
@@ -66,6 +69,16 @@ func (m *Module) Load(client *irc.Client) error {
 	}
 
 	values := url.Values{}
+	values.Add("skip_status", "true")
+
+	user, err := m.api.GetSelf(values)
+	if err != nil {
+		return err
+	} else {
+		m.user = user
+	}
+
+	values = url.Values{}
 	values.Add("replies", "all")
 	values.Add("with", "user")
 
@@ -173,6 +186,26 @@ func (m *Module) directMsgCmd(client *irc.Client, msg irc.Message) error {
 	return nil
 }
 
+func (m *Module) statCmd(client *irc.Client, msg irc.Message) error {
+	splited := strings.Fields(msg.Data)
+	if len(splited) < 2 || splited[0] != "!stat" || !client.Connected(msg.Receiver) {
+		return nil
+	}
+
+	id, err := strconv.Atoi(splited[1])
+	if err != nil {
+		return err
+	}
+
+	tweet, err := m.api.GetTweet(int64(id), url.Values{})
+	if err != nil {
+		return err
+	}
+
+	return client.Write("NOTICE %s :Stats for tweet %d by %s: ↻ %d ★ %d",
+		msg.Receiver, tweet.Id, tweet.User.ScreenName, tweet.RetweetCount, tweet.FavoriteCount)
+}
+
 func (m *Module) streamHandler(client *irc.Client, values url.Values) {
 	stream := m.api.UserStream(values)
 	for {
@@ -202,10 +235,14 @@ func (m *Module) formatEvent(event interface{}) string {
 		msg = fmt.Sprintf("Direct message %d by %s send to %s: %s", t.Id,
 			t.SenderScreenName, t.RecipientScreenName, html.UnescapeString(t.Text))
 	case anaconda.Tweet:
+		if t.RetweetedStatus != nil && t.User.Id != m.user.Id {
+			break
+		}
+
 		msg = fmt.Sprintf("Tweet %d by %s: %s", t.Id, t.User.ScreenName,
 			html.UnescapeString(t.Text))
 	case anaconda.EventTweet:
-		if t.Event.Event != "favorite" {
+		if t.Event.Event != "favorite" || t.Source.Id != m.user.Id {
 			break
 		}
 

@@ -232,7 +232,7 @@ func (m *Module) formatEvent(event interface{}) string {
 	case anaconda.StatusDeletionNotice:
 		msg = fmt.Sprintf("Tweet %d has been deleted", t.Id)
 	case anaconda.DirectMessage:
-		msg = fmt.Sprintf("Direct message %d by %s send to %s: %s", t.Id,
+		msg = fmt.Sprintf("Direct message %d by %s sent to %s: %s", t.Id,
 			t.SenderScreenName, t.RecipientScreenName, html.UnescapeString(t.Text))
 	case anaconda.Tweet:
 		if t.RetweetedStatus != nil && t.User.Id != m.user.Id {

@@ -113,8 +113,16 @@ func connect(config config) (conn net.Conn, err error) {
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(certFile)
 
-		config := &tls.Config{RootCAs: caCertPool}
-		return tls.Dial(netw, addr, config)
+		tlsConfig := &tls.Config{RootCAs: caCertPool}
+		if len(config.ClientCert) >= 1 && len(config.ClientKey) >= 1 {
+			clientCert, err := tls.LoadX509KeyPair(config.ClientCert, config.ClientKey)
+			if err != nil {
+				return nil, err
+			}
+
+			tlsConfig.Certificates = []tls.Certificate{ clientCert }
+		}
+		return tls.Dial(netw, addr, tlsConfig)
 	}
 
 	return net.Dial(netw, addr)

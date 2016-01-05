@@ -39,6 +39,12 @@ type config struct {
 	// Path to SSL cert (if any).
 	Cert string `json:"cert"`
 
+	// Path to SSL client certificate (if any).
+	ClientCert string `json:"client_cert"`
+
+	// Path to SSL client key (if any).
+	ClientKey string `json:"client_key"`
+
 	// List of channels to connect to.
 	Chan []string `json:"channels"`
 }

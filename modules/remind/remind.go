@@ -52,7 +52,7 @@ func (m *Module) Load(client *irc.Client) error {
 
 		duration, err := time.ParseDuration(splited[1])
 		if err != nil {
-			return err
+			return c.Write("NOTICE %s :ERROR: %s", msg.Receiver, err.Error())
 		}
 
 		limit := time.Duration(m.TimeLimit) * time.Hour

@@ -46,7 +46,7 @@ func (m *Module) Name() string {
 }
 
 func (m *Module) Help() string {
-	return "USAGE: !tweet TEXT || !reply ID TEXT || !directmsg USER TEXT || !retweet ID || !favorite ID || !stat ID"
+	return "USAGE: !tweet TEXT || !reply ID @HANDLE TEXT || !directmsg USER TEXT || !retweet ID || !favorite ID || !stat ID"
 }
 
 func (m *Module) Defaults() {

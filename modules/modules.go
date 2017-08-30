@@ -16,11 +16,12 @@ package modules
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nmeum/marvin/irc"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/nmeum/marvin/irc"
 )
 
 type Module interface {

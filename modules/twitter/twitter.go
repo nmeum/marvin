@@ -15,13 +15,14 @@ package twitter
 
 import (
 	"fmt"
-	"github.com/ChimeraCoder/anaconda"
-	"github.com/nmeum/marvin/irc"
-	"github.com/nmeum/marvin/modules"
 	"html"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/ChimeraCoder/anaconda"
+	"github.com/nmeum/marvin/irc"
+	"github.com/nmeum/marvin/modules"
 )
 
 // Maximum amount of characters allowed in a tweet.
@@ -46,7 +47,7 @@ func (m *Module) Name() string {
 }
 
 func (m *Module) Help() string {
-	return "USAGE: !tweet TEXT || !reply ID @HANDLE TEXT || !directmsg USER TEXT || !retweet ID || !favorite ID || !stat ID"
+	return "USAGE: !tweet TEXT || !reply ID @HANDLE TEXT || !directmsg USER TEXT || !retweet ID || !favorite ID || !stat ID || !follow @HANDLE"
 }
 
 func (m *Module) Defaults() {
@@ -66,6 +67,7 @@ func (m *Module) Load(client *irc.Client) error {
 		client.CmdHook("privmsg", m.retweetCmd)
 		client.CmdHook("privmsg", m.favoriteCmd)
 		client.CmdHook("privmsg", m.directMsgCmd)
+		client.CmdHook("privmsg", m.followCmd)
 	}
 
 	values := url.Values{}
@@ -220,7 +222,6 @@ func (m *Module) streamHandler(client *irc.Client, values url.Values) {
 			}
 		}
 	}
-
 	stream.Stop()
 }
 
@@ -258,4 +259,21 @@ func (m *Module) notify(client *irc.Client, text string) {
 	for _, ch := range client.Channels {
 		client.Write("NOTICE %s :%s", ch, text)
 	}
+}
+
+func (m *Module) followCmd(client *irc.Client, msg irc.Message) error {
+	splitted := strings.Fields(msg.Data)
+	if len(splitted) < 2 || splitted[0] != "!follow" || !client.Connected(msg.Receiver) {
+		return nil
+	}
+	handle := strings.Join(splitted[1:], " ")
+	return m.follow(handle, client, msg)
+}
+
+func (m *Module) follow(handle string, c *irc.Client, p irc.Message) error {
+	_, err := m.api.FollowUser(handle)
+	if err != nil {
+		return c.Write("NOTICE %s :ERROR: %s", p.Receiver, err.Error())
+	}
+	return nil
 }

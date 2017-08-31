@@ -16,13 +16,15 @@ package modules
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nmeum/marvin/irc"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/nmeum/marvin/irc"
 )
 
+// Module interface is for meta data about a module
 type Module interface {
 	Name() string
 	Help() string
@@ -30,20 +32,24 @@ type Module interface {
 	Defaults()
 }
 
+//ModuleSet is a struct for transferring information to the module
 type ModuleSet struct {
 	client  *irc.Client
 	modules []Module
 	configs string
 }
 
+// NewModuleSet creates a new ModuleSet
 func NewModuleSet(client *irc.Client, configs string) *ModuleSet {
 	return &ModuleSet{client: client, configs: configs}
 }
 
+// Register registers a new module
 func (m *ModuleSet) Register(module Module) {
 	m.modules = append(m.modules, module)
 }
 
+// LoadAll is a helper function for loading all modules
 func (m *ModuleSet) LoadAll() error {
 	if err := os.MkdirAll(m.configs, 0755); err != nil {
 		return err

@@ -23,17 +23,5 @@ Modules are configured in the specified `configs` directory which defaults to `$
 
 The available configuration variables are defined in the individual module, please consult the code to get an overview of the available options.
 
-LICENSE
-This program is free software: you can redistribute it and/or
-modify it under the terms of the GNU Affero General Public
-License as published by the Free Software Foundation, either
-version 3 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public
-License along with this program. If not, see
-<http://www.gnu.org/licenses/>.
+### License
+This program is release under the GNU AFFERO GENERAL PUBLIC LICENSE. You can check it [here](LICENSE)

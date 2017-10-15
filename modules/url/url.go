@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"compress/zlib"
 )
 
 type Module struct {
@@ -117,8 +118,17 @@ func (m *Module) extractTitle(url string) (title string, err error) {
 		return
 	}
 	defer resp.Body.Close()
+	
+	var reader = resp.Body
+	if resp.Header.Get("Content-Encoding") == "deflate" {
+		readerZ, errZ := zlib.NewReader(resp.Body)
+		defer readerZ.Close()
+		if errZ == nil {
+			reader = readerZ
+		}
+	}
 
-	doc, err := html.Parse(resp.Body)
+	doc, err := html.Parse(reader)
 	if err != nil {
 		return
 	}

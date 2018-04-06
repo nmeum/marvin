@@ -50,6 +50,7 @@ func (m *Module) Load(client *irc.Client) error {
 			return nil
 		}
 
+		splited[1] = strings.Replace(splited[1],"min","m",1)
 		duration, err := time.ParseDuration(splited[1])
 		if err != nil {
 			return c.Write("NOTICE %s :ERROR: %s", msg.Receiver, err.Error())
